@@ -617,7 +617,7 @@ for n, course in enumerate(courses):
         if courses:
             other_access_preferences = OtherAccessPreferences(
                 percentage=parse_value(percentage[:-1].split(" ")[-1]),
-                courses=courses,
+                courses=[ShallowCourse(course_id=course["id"], name=course["name"]) for course in courses],
             )
 
     # Get prerequisites
@@ -782,22 +782,40 @@ with Session(engine) as session:
             # Update the reference ID
             course_data.regional_preference_id = course_data.regional_preference.id
 
-        # Handle other_access_preferences
+        # Handle other_access_preferences correctly
         if course_data.other_access_preferences:
-            if isinstance(course_data.other_access_preferences.courses, list):
-                # If courses is a list of dictionaries, either:
+            # Create properly linked ShallowCourse objects
+            if hasattr(course_data.other_access_preferences, 'courses'):
                 shallow_courses = []
-                for course_dict in course_data.other_access_preferences.courses:
-                    if isinstance(course_dict, dict):
-                        # Convert dict to ShallowCourse
+                for course_item in course_data.other_access_preferences.courses:
+                    # Handle different types of input
+                    if isinstance(course_item, dict):
                         shallow_course = ShallowCourse(
-                            course_id=course_dict["id"], name=course_dict["name"]
+                            course_id=course_item["id"], 
+                            name=course_item["name"]
                         )
-                        shallow_courses.append(shallow_course)
+                    elif isinstance(course_item, ShallowCourse):
+                        shallow_course = course_item
                     else:
-                        shallow_courses.append(course_dict)
-
+                        continue
+                    
+                    # Add shallow course to session
+                    session.add(shallow_course)
+                    shallow_courses.append(shallow_course)
+                
+                # Update with our properly created and added shallow courses
                 course_data.other_access_preferences.courses = shallow_courses
+            
+            # Add the OtherAccessPreferences to session to get ID
+            session.add(course_data.other_access_preferences)
+            session.flush()
+            
+            # Set the ID for reference
+            course_data.other_access_preferences_id = course_data.other_access_preferences.id
+            
+            # Update the relationship on both sides
+            for shallow_course in course_data.other_access_preferences.courses:
+                shallow_course.other_access_preferences_id = course_data.other_access_preferences.id
 
     # Add the courses to the database
     session.add_all(database)

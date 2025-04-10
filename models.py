@@ -183,19 +183,14 @@ class ShallowCourse(SQLModel, table=True):
     """Model for a shallow course."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
+
     course_id: str
     name: str
-
-
-# Create an association/link table
-class OtherAccessPreferenceShallowCourseLink(SQLModel, table=True):
-    """Association table between OtherAccessPreferences and ShallowCourse."""
-
-    preference_id: Optional[int] = Field(
-        default=None, foreign_key="otheraccesspreferences.id", primary_key=True
+    other_access_preferences_id: Optional[int] = Field(
+        default=None, foreign_key="otheraccesspreferences.id"
     )
-    course_id: Optional[int] = Field(
-        default=None, foreign_key="shallowcourse.id", primary_key=True
+    other_access_preferences: Optional["OtherAccessPreferences"] = Relationship(
+        back_populates="courses",
     )
 
 
@@ -206,13 +201,8 @@ class OtherAccessPreferences(SQLModel, table=True):
 
     percentage: int
 
-    # Define the relationship using the link table
     courses: List[ShallowCourse] = Relationship(
-        link_model=OtherAccessPreferenceShallowCourseLink,
-        sa_relationship_kwargs={
-            "primaryjoin": "OtherAccessPreferences.id == OtherAccessPreferenceShallowCourseLink.preference_id",
-            "secondaryjoin": "OtherAccessPreferenceShallowCourseLink.course_id == ShallowCourse.id",
-        },
+        back_populates="other_access_preferences",
     )
 
 
