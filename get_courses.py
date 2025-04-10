@@ -1,12 +1,9 @@
 """Get all courses from the DGES website."""
 
 import logging
-import sys
-
-from bs4.element import NavigableString, PageElement, Tag
 
 import models
-import utils # pylint: disable=wrong-import-order
+from utils import get_next, get_soup
 
 # Configure logging
 logging.basicConfig(
@@ -18,26 +15,12 @@ BASE_URL = "https://www.dges.gov.pt/guias/indcurso.asp?letra="
 LETTERS = "ABCDEFGHIJLMNOPQRSTVZ"
 
 
-def get_next(
-    bs4_obj: NavigableString | Tag | PageElement | None,
-) -> NavigableString | Tag:
-    """Get the next element in the BeautifulSoup object."""
-    if not bs4_obj:
-        logging.warning("No next element found. (%s)", bs4_obj)
-        sys.exit(1)
-    next_obj = bs4_obj.next
-    if not next_obj:
-        logging.warning("No next element found. (%s)", bs4_obj)
-        sys.exit(1)
-    return next_obj
-
-
 # Iterate over each letter to get all courses
 courses_info = []
 year = 0  # pylint: disable=invalid-name
 for letter in LETTERS:
     listing_url = BASE_URL + letter
-    soup = utils.get_soup(listing_url)
+    soup = get_soup(listing_url)
     if not soup:
         logging.warning("Failed to get soup for letter %s", letter)
         continue

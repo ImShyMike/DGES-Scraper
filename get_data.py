@@ -6,11 +6,10 @@ import time
 from logging.handlers import MemoryHandler
 from typing import Any, Dict, Optional
 
-from bs4.element import NavigableString, PageElement, Tag
+from bs4.element import NavigableString, Tag
 from pydantic_core import from_json
 
 # from sqlmodel import Session, SQLModel, create_engine
-import utils
 from models import (
     Averages,
     CalculationFormula,
@@ -30,11 +29,12 @@ from models import (
     RegionalPreference,
     YearData,
 )
+from utils import get_next, get_soup
 
 # Set up logging
 file_handler = logging.FileHandler("get_data.log")
 memory_handler = MemoryHandler(
-    capacity=500, flushLevel=logging.ERROR, target=file_handler
+    capacity=100, flushLevel=logging.ERROR, target=file_handler
 )
 formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(message)s",
@@ -42,7 +42,7 @@ formatter = logging.Formatter(
 )
 file_handler.setFormatter(formatter)
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         memory_handler,
@@ -126,7 +126,6 @@ def parse_value(val: str) -> Any:
 
 def get_structured(header: Tag | NavigableString | None):
     """Get the structured data from a header tag."""
-    # Early return if header not found
     if not header:
         return None, None
 
@@ -159,16 +158,13 @@ logging.info("Loaded %d courses from courses.json", len(courses))
 start_time = time.time()
 database = []
 for n, course in enumerate(courses):
-    if (
-        not course["url"]
-        == "https://www.dges.gov.pt/guias/detcursopi.asp?code=7002&codc=9500"
-    ):
-        continue
+    if n >= 50:
+        break
 
     logging.info(
         "%s - Processing course: %s with URL: %s", n, course["name"], course["url"]
     )
-    soup = utils.get_soup(course["url"])
+    soup = get_soup(course["url"])
     if not soup:
         logging.warning("Failed to get soup for course %s", course["name"])
         continue
@@ -183,7 +179,7 @@ for n, course in enumerate(courses):
         rows = table.find_all("tr")
 
         if len(rows) < 2:
-            logging.warning("Table has too few rows for course %s", course["name"])
+            logging.error("Table has too few rows for course %s", course["name"])
             continue
 
         # Extract column headers (first row)
@@ -218,7 +214,7 @@ for n, course in enumerate(courses):
 
         # If no phase headers were found, all data is for 1ª Fase
         if not has_phase_headers:
-            logging.debug("No phase headers found, assuming all data is for 1ª Fase")
+            logging.info("No phase headers found, assuming all data is for 1ª Fase")
 
         # Build column mapping
         col_mapping = {}
@@ -234,7 +230,7 @@ for n, course in enumerate(courses):
         current_section = None  # pylint: disable=invalid-name
         rows_to_skip = 1 if len(rows) < 3 else 2  # pylint: disable=invalid-name
         if rows_to_skip == 1:
-            logging.debug(
+            logging.info(
                 "Table has too few rows for course %s, assuming its only vacancies",
                 course["name"],
             )
@@ -350,7 +346,7 @@ for n, course in enumerate(courses):
     # Get even more info
     info_header = soup.find("h2", string="Características do par Instituição/Curso")
     if not info_header:
-        logging.warning("No info header found for course %s", course["name"])
+        logging.error("No info header found for course %s", course["name"])
         continue
 
     info_header = info_header.next
@@ -392,7 +388,7 @@ for n, course in enumerate(courses):
     entrance_exams = None  # pylint: disable=invalid-name
     entrance_exam_data = soup.find("h2", string="Provas de Ingresso")
     if entrance_exam_data:
-        logging.debug("Found entrance exam header.")
+        logging.info("Found entrance exam header.")
         entrance_exam_data = entrance_exam_data.next
         if entrance_exam_data:
             entrance_exam_data = entrance_exam_data.next
@@ -400,8 +396,8 @@ for n, course in enumerate(courses):
         counter = 0  # pylint: disable=invalid-name
         is_combination = False  # pylint: disable=invalid-name
         is_bundle = False  # pylint: disable=invalid-name
-        exam_pair = []
-        default_pairs = []
+        exams_final_data = []
+        exams_data = []
 
         while (
             entrance_exam_data
@@ -411,15 +407,13 @@ for n, course in enumerate(courses):
             counter += 1
             if counter == 2 and entrance_exam_data.text.strip() == "e":
                 is_combination = True  # pylint: disable=invalid-name
-                entrance_exam_data = entrance_exam_data.next
-                if entrance_exam_data:
-                    entrance_exam_data = entrance_exam_data.next
-                if entrance_exam_data:
-                    entrance_exam_data = entrance_exam_data.next
+                entrance_exam_data = get_next(get_next(get_next(entrance_exam_data)))
                 continue
 
             if entrance_exam_data.text.strip() == "ou":
                 entrance_exam_data = entrance_exam_data.next
+                exams_final_data.append(exams_data)
+                exams_data = []
                 continue
 
             entrance_exam_str = entrance_exam_data.text.strip()
@@ -431,8 +425,6 @@ for n, course in enumerate(courses):
 
             if entrance_exam_str in ("Um dos seguintes conjuntos:", ""):
                 entrance_exam_data = entrance_exam_data.next
-                default_pairs.append(exam_pair)
-                exam_pair = []
                 continue
 
             if entrance_exam_str == "Duas das seguintes provas:":
@@ -451,7 +443,7 @@ for n, course in enumerate(courses):
 
             exam_code, exam_name = exam_lst
             exams.append(Exam(name=exam_name, code=exam_code))
-            exam_pair.append(Exam(name=exam_name, code=exam_code))
+            exams_data.append(Exam(name=exam_name, code=exam_code))
 
             entrance_exam_data = entrance_exam_data.next
             if entrance_exam_data:
@@ -459,7 +451,8 @@ for n, course in enumerate(courses):
 
         if not is_combination and not is_bundle:
             # Group exams into pairs
-            exam_bundles = [ExamBundle(exams=pair) for pair in default_pairs]
+            exams_final_data.append(exams_data)
+            exam_bundles = [ExamBundle(exams=exams) for exams in exams_final_data]
 
             entrance_exams = EntranceExams(exams=exam_bundles)
         elif is_bundle:
@@ -483,7 +476,7 @@ for n, course in enumerate(courses):
         min_classification_header
     )
     if application_grade_value and entrance_exams_value:
-        logging.debug("Found minimum classification header.")
+        logging.info("Found minimum classification header.")
         min_classification = MinimumClassification(
             application_grade=parse_value(application_grade_value.rsplit(" ", 2)[1]),
             entrance_exams=parse_value(entrance_exams_value.rsplit(" ", 2)[1]),
@@ -495,130 +488,107 @@ for n, course in enumerate(courses):
 
     hs_average_value, entrance_exams_value = get_structured(calc_formula_header)
     if hs_average_value and entrance_exams_value:
-        logging.debug("Found calculation formula header.")
+        logging.info("Found calculation formula header.")
         calc_formula = CalculationFormula(
             hs_average=parse_value(hs_average_value.rsplit(" ", 2)[2][:-1]),
             entrance_exams=parse_value(entrance_exams_value.rsplit(" ", 2)[2][:-1]),
         )
 
-    # Get the regional preference (best code ive ever written frfr)
+    # Get the regional preference
     regional_preference = None  # pylint: disable=invalid-name
     regional_preference_header = soup.find("h2", string="Preferência Regional")
     if regional_preference_header:
-        logging.debug("Found regional preference header.")
-        regional_preference_header = regional_preference_header.next
-        if regional_preference_header:
-            regional_preference_header = regional_preference_header.next
-            if regional_preference_header:
-                percentage = regional_preference_header.text.strip()
-                regional_preference_header = regional_preference_header.next
-                if regional_preference_header:
-                    regional_preference_header = regional_preference_header.next
-                    if regional_preference_header:
-                        regions = regional_preference_header.text.strip().split(", ")
-                        regional_preference = RegionalPreference(
-                            percentage=parse_value(percentage[:-1].split(" ")[-1]),
-                            regions=[region.strip() for region in regions],
-                        )
+        logging.info("Found regional preference header.")
+        regional_preference_header = get_next(get_next(regional_preference_header))
 
-    # Get the other access preferences (its getting insane at this point)
+        percentage = regional_preference_header.text.strip()
+
+        regional_preference_header = get_next(get_next(regional_preference_header))
+
+        regions = regional_preference_header.text.strip().split(", ")
+        regional_preference = RegionalPreference(
+            percentage=parse_value(percentage[:-1].split(" ")[-1]),
+            regions=[region.strip() for region in regions],
+        )
+
+    # Get the other access preferences
     other_access_preferences = None  # pylint: disable=invalid-name
     oa_preferences_header = soup.find("h2", string="Outros Acessos Preferenciais")
     if oa_preferences_header:
-        logging.debug("Found other access preferences header.")
-        oa_preferences_header = oa_preferences_header.next
-        if oa_preferences_header:
-            oa_preferences_header = oa_preferences_header.next
-            if oa_preferences_header:
-                percentage = oa_preferences_header.text.strip()
+        logging.info("Found other access preferences header.")
+        oa_preferences_header = get_next(get_next(oa_preferences_header))
+        percentage = oa_preferences_header.text.strip()
+        oa_preferences_header = get_next(
+            get_next(get_next(get_next(oa_preferences_header)))
+        )
+        courses = []
+        while True:
+            if (
+                not oa_preferences_header
+                or oa_preferences_header.name == "a"
+                or oa_preferences_header.text.strip() == ""
+            ):
+                break
+            if oa_preferences_header.name == "br":
                 oa_preferences_header = oa_preferences_header.next
-                if oa_preferences_header:
-                    oa_preferences_header = oa_preferences_header.next
-                    if oa_preferences_header:
-                        oa_preferences_header = oa_preferences_header.next
-                        if oa_preferences_header:
-                            oa_preferences_header = oa_preferences_header.next
-                            courses = []
-                            while True:
-                                if (
-                                    not oa_preferences_header
-                                    or oa_preferences_header.name == "a"
-                                    or oa_preferences_header.text.strip() == ""
-                                ):
-                                    break
-                                if oa_preferences_header.name == "br":
-                                    oa_preferences_header = oa_preferences_header.next
-                                    continue
+                continue
 
-                                course_id, course_name = (
-                                    oa_preferences_header.text.strip().split(" ", 1)
-                                )
-                                shallow_course = {
-                                    "id": course_id,
-                                    "name": course_name,
-                                }
-                                courses.append(shallow_course)
-                                oa_preferences_header = oa_preferences_header.next
-                                if oa_preferences_header:
-                                    oa_preferences_header = oa_preferences_header.next
+            course_id, course_name = oa_preferences_header.text.strip().split(" ", 1)
+            shallow_course = {
+                "id": course_id,
+                "name": course_name,
+            }
+            courses.append(shallow_course)
+            oa_preferences_header = get_next(get_next(oa_preferences_header))
 
-                            if courses:
-                                other_access_preferences = OtherAccessPreferences(
-                                    percentage=parse_value(
-                                        percentage[:-1].split(" ")[-1]
-                                    ),
-                                    courses=courses,
-                                )
+        if courses:
+            other_access_preferences = OtherAccessPreferences(
+                percentage=parse_value(percentage[:-1].split(" ")[-1]),
+                courses=courses,
+            )
 
-    # Get prerequisites (i swear this is the last time)
+    # Get prerequisites
     prerequisites = None  # pylint: disable=invalid-name
     prerequisites_header = soup.find("h2", string="Pré-Requisitos")
     if prerequisites_header:
-        logging.debug("Found prerequisites header.")
-        prerequisites_header = prerequisites_header.next
-        if prerequisites_header:
-            prerequisites_header = prerequisites_header.next
-            if prerequisites_header:
-                prerequisite_type = prerequisites_header.text.strip().split(": ", 1)[1]
-                prerequisites_header = prerequisites_header.next
-                if prerequisites_header:
+        logging.info("Found prerequisites header.")
+        prerequisites_header = get_next(get_next(prerequisites_header))
+        prerequisites_list = prerequisites_header.text.strip().split(": ", 1)
+        if len(prerequisites_list) == 2:
+            prerequisite_type = prerequisites_list[1]
+            prerequisites_header = get_next(
+                get_next(get_next(get_next(prerequisites_header)))
+            )
+            groups = []
+            while True:
+                if (
+                    not prerequisites_header
+                    or prerequisites_header.name == "h2"
+                    or prerequisites_header.text.strip() == ""
+                    or prerequisites_header.text.strip() == "Provas de Ingresso"
+                ):
+                    break
+                if prerequisites_header.name == "br":
                     prerequisites_header = prerequisites_header.next
-                    if prerequisites_header:
-                        prerequisites_header = prerequisites_header.next
-                        if prerequisites_header:
-                            prerequisites_header = prerequisites_header.next
-                            groups = []
-                            while True:
-                                if (
-                                    not prerequisites_header
-                                    or prerequisites_header.name == "h2"
-                                    or prerequisites_header.text.strip() == ""
-                                    or prerequisites_header.text.strip()
-                                    == "Provas de Ingresso"
-                                ):
-                                    break
-                                if prerequisites_header.name == "br":
-                                    prerequisites_header = prerequisites_header.next
-                                    continue
+                    continue
 
-                                prerequisite_group = (
-                                    prerequisites_header.text.strip()
-                                    .split(" - ", 1)[0]
-                                    .split(" ", 1)[1]
-                                )
-                                logging.debug(
-                                    "Found prerequisite group: %s", prerequisite_group
-                                )
-                                groups.append(prerequisite_group)
-                                prerequisites_header = prerequisites_header.next
-                                if prerequisites_header:
-                                    prerequisites_header = prerequisites_header.next
+                prerequisite_group = (
+                    prerequisites_header.text.strip().split(" - ", 1)[0].split(" ", 1)[1]
+                )
+                logging.debug("Found prerequisite group: %s", prerequisite_group)
+                groups.append(prerequisite_group)
+                prerequisites_header = get_next(get_next(prerequisites_header))
 
-                            if groups:
-                                prerequisites = Prerequisites(
-                                    type=prerequisite_type,
-                                    groups=groups,
-                                )
+            if groups:
+                prerequisites = Prerequisites(
+                    type=prerequisite_type,
+                    groups=groups,
+                )
+        else:
+            logging.warning(
+                "Prerequisites data is not in the expected format: %s",
+                prerequisites_header.text.strip(),
+            )
 
     stringified_course = json.dumps(course, ensure_ascii=False)
 
@@ -641,8 +611,8 @@ for n, course in enumerate(courses):
         )
     )
 
-    logging.info("Sleeping for 0.2 seconds...")
-    time.sleep(0.2)
+    logging.info("Sleeping for 0.1 seconds...")
+    time.sleep(0.1)
 
 database_obj = Database(courses=database)
 with open("database.json", "w", encoding="utf-8") as f:
@@ -650,6 +620,5 @@ with open("database.json", "w", encoding="utf-8") as f:
 logging.info("Database saved to database.json")
 
 time_taken = time.time() - start_time
-logging.info("Data processing completed in %.2f seconds", time_taken)
 logging.info("Total courses processed: %d", len(database))
-logging.info("Data processing finished successfully.")
+logging.info("Data processing completed in %.2f seconds", time_taken)
