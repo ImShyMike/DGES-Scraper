@@ -2,8 +2,14 @@
 
 from typing import Dict, List, Optional
 
-from sqlmodel import SQLModel #, Field, Relationship
-#from pydantic import BaseModel
+# from pydantic import BaseModel
+from sqlmodel import JSON, Column, Field, Relationship, Session, SQLModel, create_engine
+
+# Specify the database URL. Here we use a local SQLite database file.
+SQLITE_URL = "sqlite:///database.db"
+engine = create_engine(
+    SQLITE_URL, echo=True
+)  # echo=True prints SQL commands for debugging
 
 
 class Courses(SQLModel):
@@ -13,59 +19,97 @@ class Courses(SQLModel):
     courses: List["Course"]
 
 
-class Institution(SQLModel):
+class Institution(SQLModel, table=True):
     """Model for an institution."""
 
-    id: str
+    id: str = Field(primary_key=True)
     name: str
+    courses: List["Course"] = Relationship(back_populates="institution")
 
-class Course(SQLModel):
+
+class Course(SQLModel, table=True):
     """Model for a course from an institution."""
 
-    id: str
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    course_id: str
     name: str
     url: str
-    institution: Institution
+    institution_id: Optional[str] = Field(default=None, foreign_key="institution.id")
+    institution: Optional[Institution] = Relationship(back_populates="courses")
     vacancies: int
 
 
-class CandidateStats(SQLModel):
+class CandidateStats(SQLModel, table=True):  #
     """Model for the candidates statistics."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    is_placed: bool = Field(default=False)
     total: Optional[int]
     fem: Optional[int]
     masc: Optional[int]
     first_option: Optional[int]
 
 
-class Averages(SQLModel):
+class Averages(SQLModel, table=True):  #
     """Model for the averages of candidates."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     application_grade: Optional[float]
     entrance_exams: Optional[float]
     hs_average: Optional[float]
 
 
-class PhaseData(SQLModel):
+class PhaseData(SQLModel, table=True):  #
     """Model for a phase with its data."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    candidates_id: Optional[int] = Field(default=None, foreign_key="candidatestats.id")
+    placed_id: Optional[int] = Field(default=None, foreign_key="candidatestats.id")
+    averages_id: Optional[int] = Field(default=None, foreign_key="averages.id")
+
     vacancies: Optional[int]
-    candidates: Optional[CandidateStats]
-    placed: Optional[CandidateStats]
-    averages: Optional[Averages]
+    candidates: Optional[CandidateStats] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[PhaseData.candidates_id]"}
+    )
+    placed: Optional[CandidateStats] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[PhaseData.placed_id]"}
+    )
+    averages: Optional[Averages] = Relationship()
     grade_last: Optional[float]
     info_url: Optional[str]
 
 
-class YearData(SQLModel):
+class YearData(SQLModel, table=True):  #
     """Model for a year with its data."""
 
-    phase1: PhaseData
-    phase2: Optional[PhaseData]
+    id: Optional[int] = Field(default=None, primary_key=True)
+    course_data_id: Optional[int] = Field(default=None, foreign_key="coursedata.id")
+
+    year: int
+
+    phase1_id: Optional[int] = Field(default=None, foreign_key="phasedata.id")
+    phase2_id: Optional[int] = Field(default=None, foreign_key="phasedata.id")
+
+    phase1: Optional["PhaseData"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[YearData.phase1_id]"}
+    )
+    phase2: Optional["PhaseData"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[YearData.phase2_id]"}
+    )
+    course_data: Optional["CourseData"] = Relationship(
+        back_populates="year_data",
+        sa_relationship_kwargs={"foreign_keys": "[YearData.course_data_id]"},
+    )
 
 
-class Characteristics(SQLModel):
+class Characteristics(SQLModel, table=True):
     """Model for the characteristics of a course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     degree: str
     CNAEF: str
@@ -102,52 +146,120 @@ class EntranceExams(SQLModel):
     exams: ExamCombination | ExamBundle | List[ExamBundle]
 
 
-class RegionalPreference(SQLModel):
+class RegionalPreference(SQLModel, table=True):
     """Model for the regional preference of a course."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+
     percentage: float
-    regions: List[str]
+    regions: List[str] = Field(default=None, sa_column=Column(JSON))
 
 
-class OtherAccessPreferences(SQLModel):
+class ShallowCourse(SQLModel, table=True):
+    """Model for a shallow course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    course_id: str
+    name: str
+
+
+# Create an association/link table
+class OtherAccessPreferenceShallowCourseLink(SQLModel, table=True):
+    """Association table between OtherAccessPreferences and ShallowCourse."""
+
+    preference_id: Optional[int] = Field(
+        default=None, foreign_key="otheraccesspreferences.id", primary_key=True
+    )
+    course_id: Optional[int] = Field(
+        default=None, foreign_key="shallowcourse.id", primary_key=True
+    )
+
+
+class OtherAccessPreferences(SQLModel, table=True):
     """Model for other access preferences of a course."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+
     percentage: int
-    courses: List[Dict[str, str]]
+
+    # Define the relationship using the link table
+    courses: List[ShallowCourse] = Relationship(
+        link_model=OtherAccessPreferenceShallowCourseLink,
+        sa_relationship_kwargs={
+            "primaryjoin": "OtherAccessPreferences.id == OtherAccessPreferenceShallowCourseLink.preference_id",
+            "secondaryjoin": "OtherAccessPreferenceShallowCourseLink.course_id == ShallowCourse.id",
+        },
+    )
 
 
-class CalculationFormula(SQLModel):
+class CalculationFormula(SQLModel, table=True):
     """Model for the calculation formula of a course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     hs_average: int
     entrance_exams: int
 
 
-class MinimumClassification(SQLModel):
+class MinimumClassification(SQLModel, table=True):
     """Model for the minimum classification of a course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     application_grade: int
     entrance_exams: int
 
-class Prerequisites(SQLModel):
+
+class Prerequisites(SQLModel, table=True):
     """Model for the prerequisites of a course."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+
     type: str
-    groups: List[str]
+    group: str
 
 
-class CourseData(SQLModel):
+class CourseData(SQLModel, table=True):
     """Model for a course with its data."""
 
-    course: Course
-    characteristics: Characteristics
-    previous_data: Optional[Dict[str, YearData]]
-    entrance_exams: Optional[EntranceExams]
-    min_classification: Optional[MinimumClassification]
-    calculation_formula: Optional[CalculationFormula]
-    regional_preference: Optional[RegionalPreference]
-    other_access_preferences: Optional[OtherAccessPreferences]
-    prerequisites: Optional[Prerequisites]
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    course_id: Optional[str] = Field(default=None, foreign_key="course.id")
+    characteristics_id: Optional[int] = Field(
+        default=None, foreign_key="characteristics.id"
+    )
+    year_data_id: Optional[int] = Field(default=None, foreign_key="yeardata.id")
+    min_classification_id: Optional[int] = Field(
+        default=None, foreign_key="minimumclassification.id"
+    )
+    calculation_formula_id: Optional[int] = Field(
+        default=None, foreign_key="calculationformula.id"
+    )
+    regional_preference_id: Optional[int] = Field(
+        default=None, foreign_key="regionalpreference.id"
+    )
+    other_access_preferences_id: Optional[int] = Field(
+        default=None, foreign_key="otheraccesspreferences.id"
+    )
+    prerequisites_id: Optional[int] = Field(
+        default=None, foreign_key="prerequisites.id"
+    )
+
+    course: Course = Relationship()
+    characteristics: Characteristics = Relationship()
+    year_data: List[YearData] = Relationship(
+        back_populates="course_data",
+        sa_relationship_kwargs={"foreign_keys": "[YearData.course_data_id]"},
+    )
+    entrance_exams: Optional[Dict] = Field(
+        default=None, sa_column=Column(JSON)
+    )
+    min_classification: Optional[MinimumClassification] = Relationship()
+    calculation_formula: Optional[CalculationFormula] = Relationship()
+    regional_preference: Optional[RegionalPreference] = Relationship()
+    other_access_preferences: Optional[OtherAccessPreferences] = Relationship()
+    prerequisites: Optional[Prerequisites] = Relationship()
+
     extra_stats_url: Optional[str]
 
 
