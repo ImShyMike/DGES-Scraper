@@ -27,6 +27,7 @@ from models import (
     RegionalPreference,
     ShallowCourse,
     YearData,
+    Region,
     engine,
 )
 from utils import get_next, get_soup
@@ -580,7 +581,7 @@ for n, course in enumerate(courses):
         regions = regional_preference_header.text.strip().split(": ")[1].split(", ")
         regional_preference = RegionalPreference(
             percentage=parse_value(percentage[:-1].split(" ")[-1]),
-            regions=[region.strip() for region in regions],
+            regions=[Region(name=region.strip()) for region in regions],
         )
 
     # Get the other access preferences
@@ -751,6 +752,35 @@ with Session(engine) as session:
             
             # Now store the ID reference properly
             course_data.entrance_exams_id = course_data.entrance_exams.id
+            
+        # Handle regional_preference correctly
+        if course_data.regional_preference:
+            # Create actual Region objects and add them to session
+            if hasattr(course_data.regional_preference, 'regions'):
+                region_objects = []
+                for region in course_data.regional_preference.regions:
+                    if isinstance(region, dict):
+                        region_obj = Region(name=region["name"])
+                    elif isinstance(region, str):
+                        region_obj = Region(name=region)
+                    elif hasattr(region, "name"):  # It's already a Region object
+                        region_obj = Region(name=region.name)
+                    else:
+                        continue
+                        
+                    # Add region to session
+                    session.add(region_obj)
+                    region_objects.append(region_obj)
+                
+                # Update with our properly created and added regions
+                course_data.regional_preference.regions = region_objects
+            
+            # Save the regional_preference to get an ID
+            session.add(course_data.regional_preference)
+            session.flush()
+            
+            # Update the reference ID
+            course_data.regional_preference_id = course_data.regional_preference.id
 
         # Handle other_access_preferences
         if course_data.other_access_preferences:

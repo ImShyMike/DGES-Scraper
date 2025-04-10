@@ -1,9 +1,9 @@
 """Pydantic models for the application."""
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 # from pydantic import BaseModel
-from sqlmodel import JSON, Column, Field, Relationship, Session, SQLModel, create_engine
+from sqlmodel import JSON, Column, Field, Relationship, SQLModel, create_engine
 
 # Specify the database URL. Here we use a local SQLite database file.
 SQLITE_URL = "sqlite:///database.db"
@@ -40,7 +40,7 @@ class Course(SQLModel, table=True):
     vacancies: int
 
 
-class CandidateStats(SQLModel, table=True):  #
+class CandidateStats(SQLModel, table=True):
     """Model for the candidates statistics."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -52,7 +52,7 @@ class CandidateStats(SQLModel, table=True):  #
     first_option: Optional[int]
 
 
-class Averages(SQLModel, table=True):  #
+class Averages(SQLModel, table=True):
     """Model for the averages of candidates."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -62,7 +62,7 @@ class Averages(SQLModel, table=True):  #
     hs_average: Optional[float]
 
 
-class PhaseData(SQLModel, table=True):  #
+class PhaseData(SQLModel, table=True):
     """Model for a phase with its data."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -83,7 +83,7 @@ class PhaseData(SQLModel, table=True):  #
     info_url: Optional[str]
 
 
-class YearData(SQLModel, table=True):  #
+class YearData(SQLModel, table=True):
     """Model for a year with its data."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -155,13 +155,28 @@ class EntranceExams(SQLModel, table=True):
     exams: List[ExamBundle] = Relationship(back_populates="entrance_exams")
 
 
+class Region(SQLModel, table=True):
+    """Model for a region."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    name: str
+    regional_preference_id: Optional[int] = Field(
+        default=None, foreign_key="regionalpreference.id"
+    )
+    regional_preference: Optional["RegionalPreference"] = Relationship(
+        back_populates="regions"
+    )
+
 class RegionalPreference(SQLModel, table=True):
     """Model for the regional preference of a course."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
     percentage: float
-    regions: List[str] = Field(default=None, sa_column=Column(JSON))
+    regions: List[Region] = Relationship(
+        back_populates="regional_preference",
+    )
 
 
 class ShallowCourse(SQLModel, table=True):
