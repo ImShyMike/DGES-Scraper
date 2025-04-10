@@ -19,7 +19,6 @@ from models import (
     EntranceExams,
     Exam,
     ExamBundle,
-    ExamCombination,
     Institution,
     MinimumClassification,
     OtherAccessPreferences,
@@ -29,7 +28,6 @@ from models import (
     ShallowCourse,
     YearData,
     engine,
-    Region,
 )
 from utils import get_next, get_soup
 
@@ -57,6 +55,7 @@ logging.basicConfig(
 BASE_URL = "https://www.dges.gov.pt/guias/indcurso.asp?letra="
 LETTERS = "ABCDEFGHIJLMNOPQRSTVZ"
 LETTERS = "B"
+
 
 # Helper functions to build nested candidate stats and medias
 def build_candidate(
@@ -534,25 +533,13 @@ for n, course in enumerate(courses):
             if entrance_exam_data:
                 entrance_exam_data = entrance_exam_data.next
 
-        if not is_combination and not is_bundle:
-            # Group exams into pairs
-            exams_final_data.append(exams_data)
-            exam_bundles = [ExamBundle(exams=exams) for exams in exams_final_data]
+        # Group exams
+        exams_final_data.append(exams_data)
+        exam_bundles = [ExamBundle(exams=exams) for exams in exams_final_data]
 
-            entrance_exams = EntranceExams(exams=exam_bundles)
-        elif is_bundle:
-            # Group exams into bundles
-            exam_bundle = ExamBundle(exams=exams)
-
-            entrance_exams = EntranceExams(exams=exam_bundle)
-        else:
-            # Group exams a combination
-            exam_combination = ExamCombination(
-                exam1=exams[0],
-                exam2=exams[1:],
-            )
-
-            entrance_exams = EntranceExams(exams=exam_combination)
+        entrance_exams = EntranceExams(
+            is_combination=is_combination, is_bundle=is_bundle, exams=exam_bundles
+        )
 
     # Get the minimum classification
     min_classification = None  # pylint: disable=invalid-name
@@ -759,7 +746,7 @@ with Session(engine) as session:
         # Handle entrance_exams correctly (using JSON field)
         if course_data.entrance_exams:
             course_data.entrance_exams = convert_to_dict(course_data.entrance_exams)
-            
+
         # Handle other_access_preferences
         if course_data.other_access_preferences:
             if isinstance(course_data.other_access_preferences.courses, list):
@@ -769,27 +756,13 @@ with Session(engine) as session:
                     if isinstance(course_dict, dict):
                         # Convert dict to ShallowCourse
                         shallow_course = ShallowCourse(
-                            course_id=course_dict["id"],
-                            name=course_dict["name"]
+                            course_id=course_dict["id"], name=course_dict["name"]
                         )
                         shallow_courses.append(shallow_course)
                     else:
                         shallow_courses.append(course_dict)
-                        
+
                 course_data.other_access_preferences.courses = shallow_courses
-            
-        # Handle regional_preference regions
-        if course_data.regional_preference:
-            if hasattr(course_data.regional_preference, 'regions'):
-                regions = []
-                for region in course_data.regional_preference.regions:
-                    if isinstance(region, str):
-                        # Create a Region model instance from the string
-                        region_obj = Region(name=region)
-                        regions.append(region_obj)
-                    else:
-                        regions.append(region)
-                course_data.regional_preference.regions = regions
 
     # Add the courses to the database
     session.add_all(database)

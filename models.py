@@ -127,13 +127,6 @@ class Exam(SQLModel):
     code: str
 
 
-class ExamCombination(SQLModel):
-    """Model for a combination of exams."""
-
-    exam1: Exam
-    exam2: List[Exam]
-
-
 class ExamBundle(SQLModel):
     """Model for a bundle of exams."""
 
@@ -143,7 +136,9 @@ class ExamBundle(SQLModel):
 class EntranceExams(SQLModel):
     """Model for the entrance exams of a course."""
 
-    exams: ExamCombination | ExamBundle | List[ExamBundle]
+    is_combination: bool = Field(default=False)
+    is_bundle: bool = Field(default=False)
+    exams: List[ExamBundle]
 
 
 class RegionalPreference(SQLModel, table=True):
