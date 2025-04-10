@@ -743,9 +743,14 @@ with Session(engine) as session:
 
     # Convert or remove complex objects before database insertion
     for course_data in database:
-        # Handle entrance_exams correctly (using JSON field)
+        # Handle entrance_exams correctly
         if course_data.entrance_exams:
-            course_data.entrance_exams = convert_to_dict(course_data.entrance_exams)
+            # First save the entrance_exams object to the session
+            session.add(course_data.entrance_exams)
+            session.flush()  # Get ID assigned
+            
+            # Now store the ID reference properly
+            course_data.entrance_exams_id = course_data.entrance_exams.id
 
         # Handle other_access_preferences
         if course_data.other_access_preferences:

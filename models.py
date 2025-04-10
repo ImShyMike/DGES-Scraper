@@ -120,25 +120,39 @@ class Characteristics(SQLModel, table=True):
     current_vacancies: Optional[int]
 
 
-class Exam(SQLModel):
+class Exam(SQLModel, table=True):
     """Model for an exam."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     name: str
     code: str
+    exam_bundle_id: Optional[int] = Field(
+        default=None, foreign_key="exambundle.id"
+    )
+    exam_bundle: Optional["ExamBundle"] = Relationship(back_populates="exams")
 
 
-class ExamBundle(SQLModel):
+class ExamBundle(SQLModel, table=True):
     """Model for a bundle of exams."""
 
-    exams: List[Exam]
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    exams: List[Exam] = Relationship(back_populates="exam_bundle")
+    entrance_exams_id: Optional[int] = Field(
+        default=None, foreign_key="entranceexams.id"
+    )
+    entrance_exams: Optional["EntranceExams"] = Relationship(back_populates="exams")
 
 
-class EntranceExams(SQLModel):
+class EntranceExams(SQLModel, table=True):
     """Model for the entrance exams of a course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     is_combination: bool = Field(default=False)
     is_bundle: bool = Field(default=False)
-    exams: List[ExamBundle]
+    exams: List[ExamBundle] = Relationship(back_populates="entrance_exams")
 
 
 class RegionalPreference(SQLModel, table=True):
@@ -224,6 +238,9 @@ class CourseData(SQLModel, table=True):
         default=None, foreign_key="characteristics.id"
     )
     year_data_id: Optional[int] = Field(default=None, foreign_key="yeardata.id")
+    entrance_exams_id: Optional[int] = Field(
+        default=None, foreign_key="entranceexams.id"
+    )
     min_classification_id: Optional[int] = Field(
         default=None, foreign_key="minimumclassification.id"
     )
@@ -246,9 +263,7 @@ class CourseData(SQLModel, table=True):
         back_populates="course_data",
         sa_relationship_kwargs={"foreign_keys": "[YearData.course_data_id]"},
     )
-    entrance_exams: Optional[Dict] = Field(
-        default=None, sa_column=Column(JSON)
-    )
+    entrance_exams: Optional[EntranceExams] = Relationship()
     min_classification: Optional[MinimumClassification] = Relationship()
     calculation_formula: Optional[CalculationFormula] = Relationship()
     regional_preference: Optional[RegionalPreference] = Relationship()
