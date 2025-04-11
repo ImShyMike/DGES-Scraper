@@ -3,20 +3,13 @@
 from typing import List, Optional
 
 # from pydantic import BaseModel
-from sqlmodel import JSON, Column, Field, Relationship, SQLModel, create_engine
+from sqlmodel import Field, Relationship, SQLModel, create_engine
 
 # Specify the database URL. Here we use a local SQLite database file.
 SQLITE_URL = "sqlite:///database.db"
 engine = create_engine(
     SQLITE_URL, echo=True
 )  # echo=True prints SQL commands for debugging
-
-
-class Courses(SQLModel):
-    """Model for a list of courses for a given year."""
-
-    year: int
-    courses: List["Course"]
 
 
 class Institution(SQLModel, table=True):
@@ -87,7 +80,9 @@ class YearData(SQLModel, table=True):
     """Model for a year with its data."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    course_data_id: Optional[int] = Field(default=None, foreign_key="coursedata.id")
+    previous_applications_id: Optional[int] = Field(
+        default=None, foreign_key="previousapplications.id"
+    )
 
     year: int
 
@@ -100,10 +95,17 @@ class YearData(SQLModel, table=True):
     phase2: Optional["PhaseData"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[YearData.phase2_id]"}
     )
-    course_data: Optional["CourseData"] = Relationship(
-        back_populates="year_data",
-        sa_relationship_kwargs={"foreign_keys": "[YearData.course_data_id]"},
+    previous_applications: Optional["PreviousApplications"] = Relationship(
+        back_populates="year_data"
     )
+
+
+class PreviousApplications(SQLModel, table=True):
+    """Model for the previous applications of a course."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    year_data: List[YearData] = Relationship(back_populates="previous_applications")
 
 
 class Characteristics(SQLModel, table=True):
@@ -127,9 +129,7 @@ class Exam(SQLModel, table=True):
 
     name: str
     code: str
-    exam_bundle_id: Optional[int] = Field(
-        default=None, foreign_key="exambundle.id"
-    )
+    exam_bundle_id: Optional[int] = Field(default=None, foreign_key="exambundle.id")
     exam_bundle: Optional["ExamBundle"] = Relationship(back_populates="exams")
 
 
@@ -167,6 +167,7 @@ class Region(SQLModel, table=True):
     regional_preference: Optional["RegionalPreference"] = Relationship(
         back_populates="regions"
     )
+
 
 class RegionalPreference(SQLModel, table=True):
     """Model for the regional preference of a course."""
@@ -242,7 +243,9 @@ class CourseData(SQLModel, table=True):
     characteristics_id: Optional[int] = Field(
         default=None, foreign_key="characteristics.id"
     )
-    year_data_id: Optional[int] = Field(default=None, foreign_key="yeardata.id")
+    previous_applications_id: Optional[int] = Field(
+        default=None, foreign_key="previousapplications.id"
+    )
     entrance_exams_id: Optional[int] = Field(
         default=None, foreign_key="entranceexams.id"
     )
@@ -264,10 +267,7 @@ class CourseData(SQLModel, table=True):
 
     course: Course = Relationship()
     characteristics: Characteristics = Relationship()
-    year_data: List[YearData] = Relationship(
-        back_populates="course_data",
-        sa_relationship_kwargs={"foreign_keys": "[YearData.course_data_id]"},
-    )
+    previous_applications: PreviousApplications = Relationship()
     entrance_exams: Optional[EntranceExams] = Relationship()
     min_classification: Optional[MinimumClassification] = Relationship()
     calculation_formula: Optional[CalculationFormula] = Relationship()
@@ -276,9 +276,3 @@ class CourseData(SQLModel, table=True):
     prerequisites: Optional[Prerequisites] = Relationship()
 
     extra_stats_url: Optional[str]
-
-
-class Database(SQLModel):
-    """Model for the database."""
-
-    courses: List["CourseData"]

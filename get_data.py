@@ -15,7 +15,6 @@ from models import (
     Characteristics,
     Course,
     CourseData,
-    Database,
     EntranceExams,
     Exam,
     ExamBundle,
@@ -24,10 +23,11 @@ from models import (
     OtherAccessPreferences,
     PhaseData,
     Prerequisites,
+    PreviousApplications,
+    Region,
     RegionalPreference,
     ShallowCourse,
     YearData,
-    Region,
     engine,
 )
 from utils import get_next, get_soup
@@ -55,7 +55,6 @@ logging.basicConfig(
 # Base URL for course listings by letter
 BASE_URL = "https://www.dges.gov.pt/guias/indcurso.asp?letra="
 LETTERS = "ABCDEFGHIJLMNOPQRSTVZ"
-LETTERS = "B"
 
 
 # Helper functions to build nested candidate stats and medias
@@ -161,6 +160,10 @@ def get_structured(header: Tag | NavigableString | None):
     return None, None
 
 
+start_time = time.time()
+
+logging.info("Getting all courses from DGES...")
+
 # Iterate over each letter to get all courses
 courses = []
 year = 0  # pylint: disable=invalid-name
@@ -170,6 +173,7 @@ for letter in LETTERS:
     if not soup:
         logging.warning("Failed to get soup for letter %s", letter)
         continue
+    logging.info("Processing letter %s", letter)
 
     # Get the div with everything
     stuff_div = soup.select_one(
@@ -239,9 +243,8 @@ for letter in LETTERS:
         elif 'class="lin-curso"' in repr(item):
             year = int(item.text.strip().split(" ")[1])
 
-logging.info("Loaded %d courses from courses.json", len(courses))
+logging.info("Loaded %d courses", len(courses))
 
-start_time = time.time()
 database = []
 for n, course in enumerate(courses):
     logging.info("%s - Processing course: %s with URL: %s", n, course.name, course.url)
@@ -617,7 +620,10 @@ for n, course in enumerate(courses):
         if courses:
             other_access_preferences = OtherAccessPreferences(
                 percentage=parse_value(percentage[:-1].split(" ")[-1]),
-                courses=[ShallowCourse(course_id=course["id"], name=course["name"]) for course in courses],
+                courses=[
+                    ShallowCourse(course_id=course["id"], name=course["name"])
+                    for course in courses
+                ],
             )
 
     # Get prerequisites
@@ -677,7 +683,7 @@ for n, course in enumerate(courses):
     database.append(
         CourseData(
             course=course,  # from_json(stringified_course),
-            year_data=year_data,
+            previous_applications=PreviousApplications(year_data=year_data),
             characteristics=characteristics,
             entrance_exams=entrance_exams,
             min_classification=min_classification,
@@ -692,28 +698,8 @@ for n, course in enumerate(courses):
     logging.info("Sleeping for 0.1 seconds...")
     time.sleep(0.1)
 
-database_obj = Database(courses=database)
-with open("database.json", "w", encoding="utf-8") as f:
-    f.write(database_obj.model_dump_json(indent=4))
-logging.info("Database saved to database.json")
-
-time_taken = time.time() - start_time
-logging.info("Total courses processed: %d", len(database))
-logging.info("Data processing completed in %.2f seconds", time_taken)
-
-
-def convert_to_dict(obj):
-    """Recursively convert custom objects to dictionaries for JSON serialization."""
-    if isinstance(obj, dict):
-        return {k: convert_to_dict(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_to_dict(item) for item in obj]
-    elif hasattr(obj, "model_dump"):
-        # For SQLModel/Pydantic models that have model_dump method
-        return convert_to_dict(obj.model_dump())
-    else:
-        return obj
-
+logging.info("Finished processing all courses.")
+logging.info("Saving data to the database...")
 
 with Session(engine) as session:
     # Wipe the full database
@@ -744,19 +730,10 @@ with Session(engine) as session:
 
     # Convert or remove complex objects before database insertion
     for course_data in database:
-        # Handle entrance_exams correctly
-        if course_data.entrance_exams:
-            # First save the entrance_exams object to the session
-            session.add(course_data.entrance_exams)
-            session.flush()  # Get ID assigned
-            
-            # Now store the ID reference properly
-            course_data.entrance_exams_id = course_data.entrance_exams.id
-            
         # Handle regional_preference correctly
         if course_data.regional_preference:
             # Create actual Region objects and add them to session
-            if hasattr(course_data.regional_preference, 'regions'):
+            if hasattr(course_data.regional_preference, "regions"):
                 region_objects = []
                 for region in course_data.regional_preference.regions:
                     if isinstance(region, dict):
@@ -767,58 +744,82 @@ with Session(engine) as session:
                         region_obj = Region(name=region.name)
                     else:
                         continue
-                        
+
                     # Add region to session
                     session.add(region_obj)
                     region_objects.append(region_obj)
-                
+
                 # Update with our properly created and added regions
                 course_data.regional_preference.regions = region_objects
-            
+
             # Save the regional_preference to get an ID
             session.add(course_data.regional_preference)
             session.flush()
-            
+
             # Update the reference ID
             course_data.regional_preference_id = course_data.regional_preference.id
 
         # Handle other_access_preferences correctly
         if course_data.other_access_preferences:
             # Create properly linked ShallowCourse objects
-            if hasattr(course_data.other_access_preferences, 'courses'):
+            if hasattr(course_data.other_access_preferences, "courses"):
                 shallow_courses = []
                 for course_item in course_data.other_access_preferences.courses:
                     # Handle different types of input
                     if isinstance(course_item, dict):
                         shallow_course = ShallowCourse(
-                            course_id=course_item["id"], 
-                            name=course_item["name"]
+                            course_id=course_item["id"], name=course_item["name"]
                         )
                     elif isinstance(course_item, ShallowCourse):
                         shallow_course = course_item
                     else:
                         continue
-                    
+
                     # Add shallow course to session
                     session.add(shallow_course)
                     shallow_courses.append(shallow_course)
-                
+
                 # Update with our properly created and added shallow courses
                 course_data.other_access_preferences.courses = shallow_courses
-            
+
             # Add the OtherAccessPreferences to session to get ID
             session.add(course_data.other_access_preferences)
             session.flush()
-            
+
             # Set the ID for reference
-            course_data.other_access_preferences_id = course_data.other_access_preferences.id
-            
+            course_data.other_access_preferences_id = (
+                course_data.other_access_preferences.id
+            )
+
             # Update the relationship on both sides
             for shallow_course in course_data.other_access_preferences.courses:
-                shallow_course.other_access_preferences_id = course_data.other_access_preferences.id
+                shallow_course.other_access_preferences_id = (
+                    course_data.other_access_preferences.id
+                )
+
+        # Handle previous_applications correctly
+        if (
+            course_data.previous_applications
+            and course_data.previous_applications.year_data
+        ):
+            # Add the PreviousApplications to session to get an ID
+            session.add(course_data.previous_applications)
+            session.flush()
+
+            # Set the ID for reference on CourseData
+            course_data.previous_applications_id = course_data.previous_applications.id
+
+            # Update the relationship on all YearData objects
+            for year in course_data.previous_applications.year_data:
+                year.previous_applications_id = course_data.previous_applications.id
 
     # Add the courses to the database
     session.add_all(database)
     session.commit()
 
 logging.info("Data saved to the database successfully.")
+
+time_taken = time.time() - start_time
+
+logging.info("Total courses processed: %d", len(database))
+logging.info("Data processing completed in %.2f seconds", time_taken)
