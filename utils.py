@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString, PageElement, Tag
 
 
-# Function to get the BeautifulSoup object of a webpage
 def get_soup(url, timeout=3, attempts=5):
     """Get the BeautifulSoup object of a webpage."""
     for attempt in range(attempts):

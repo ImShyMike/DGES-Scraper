@@ -1,4 +1,4 @@
-"""Pydantic models for the application."""
+"""Pydantic/SQLAlchemy (sqlmodel) models for the application."""
 
 from typing import List, Optional
 
@@ -30,7 +30,6 @@ class Course(SQLModel, table=True):
     url: str
     institution_id: Optional[str] = Field(default=None, foreign_key="institution.id")
     institution: Optional[Institution] = Relationship(back_populates="courses")
-    vacancies: int
 
 
 class CandidateStats(SQLModel, table=True):
