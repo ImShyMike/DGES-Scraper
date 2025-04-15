@@ -2,3 +2,5 @@ pydantic
 bs4
 sqlmodel
 requests
+flask
+flask_limiter

@@ -7,9 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel, create_engine
 
 # Specify the database URL. Here we use a local SQLite database file.
 SQLITE_URL = "sqlite:///database.db"
-engine = create_engine(
-    SQLITE_URL, echo=True
-)  # echo=True prints SQL commands for debugging
+engine = create_engine(SQLITE_URL, echo=False)
 
 
 class Institution(SQLModel, table=True):

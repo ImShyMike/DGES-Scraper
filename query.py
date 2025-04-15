@@ -42,9 +42,7 @@ QUERY_TEMPLATE = select(CourseData).options(
     .selectinload(ExamBundle.exams),
     joinedload(CourseData.min_classification),
     joinedload(CourseData.calculation_formula),
-    joinedload(CourseData.regional_preference).selectinload(
-        RegionalPreference.regions
-    ),
+    joinedload(CourseData.regional_preference).selectinload(RegionalPreference.regions),
     joinedload(CourseData.other_access_preferences).selectinload(
         OtherAccessPreferences.courses
     ),
@@ -56,6 +54,7 @@ def get_full_course_data(
     course_id: Optional[str] = None,
     course_name: Optional[str] = None,
     institution_id: Optional[str] = None,
+    limit: Optional[int] = None,
 ) -> Sequence[CourseData]:
     """
     Query full course data with all relationships.
@@ -67,13 +66,17 @@ def get_full_course_data(
         if course_id:
             query = query.where(CourseData.course.has(Course.course_id == course_id))
         if course_name:
-            query = query.where(CourseData.course.has(Course.name == course_name))
+            query = query.where(
+                CourseData.course.has(Course.name.like(f"%{course_name}%"))
+            )
         if institution_id:
             query = query.where(
                 CourseData.course.has(
                     Course.institution.has(Institution.id == institution_id)
                 )
             )
+        if limit:
+            query = query.limit(limit)
 
         result = session.exec(query).all()
 
@@ -247,8 +250,151 @@ def print_full_course_data(course_data):
                     )
 
 
+def course_data_to_dict(course_data):
+    """Convert a CourseData object to a JSON dict."""
+    if not course_data:
+        return None
+
+    result = {
+        "course": {
+            "id": course_data.course.course_id,
+            "name": course_data.course.name,
+            "url": course_data.course.url,
+            "institution": {
+                "id": course_data.course.institution_id,
+                "name": course_data.course.institution.name,
+            },
+        },
+        "extra_stats_url": course_data.extra_stats_url,
+    }
+
+    # Characteristics
+    if course_data.characteristics:
+        char = course_data.characteristics
+        result["characteristics"] = {
+            "degree": char.degree,
+            "CNAEF": char.CNAEF,
+            "duration": char.duration,
+            "ECTS": char.ECTS,
+            "type": char.type,
+            "competition": char.competition,
+            "current_vacancies": char.current_vacancies,
+        }
+
+    # Entrance exams
+    if course_data.entrance_exams:
+        ee = course_data.entrance_exams
+        result["entrance_exams"] = {
+            "is_combination": ee.is_combination,
+            "is_bundle": ee.is_bundle,
+            "bundles": [],
+        }
+
+        for bundle in ee.exams:
+            exam_bundle = {
+                "exams": [
+                    {"code": exam.code, "name": exam.name} for exam in bundle.exams
+                ]
+            }
+            result["entrance_exams"]["bundles"].append(exam_bundle)
+
+    # Minimum classification
+    if course_data.min_classification:
+        mc = course_data.min_classification
+        result["min_classification"] = {
+            "application_grade": mc.application_grade,
+            "entrance_exams": mc.entrance_exams,
+        }
+
+    # Calculation formula
+    if course_data.calculation_formula:
+        cf = course_data.calculation_formula
+        result["calculation_formula"] = {
+            "hs_average": cf.hs_average,
+            "entrance_exams": cf.entrance_exams,
+        }
+
+    # Regional preference
+    if course_data.regional_preference:
+        rp = course_data.regional_preference
+        result["regional_preference"] = {
+            "percentage": rp.percentage,
+            "regions": [{"name": region.name} for region in rp.regions],
+        }
+
+    # Other access preferences
+    if course_data.other_access_preferences:
+        oap = course_data.other_access_preferences
+        result["other_access_preferences"] = {
+            "percentage": oap.percentage,
+            "courses": [],
+        }
+
+        if hasattr(oap, "courses") and oap.courses:
+            result["other_access_preferences"]["courses"] = [
+                {"id": course.course_id, "name": course.name} for course in oap.courses
+            ]
+
+    # Prerequisites
+    if course_data.prerequisites:
+        prereq = course_data.prerequisites
+        result["prerequisites"] = {"type": prereq.type, "group": prereq.group}
+
+    # Historical data
+    if (
+        course_data.previous_applications
+        and course_data.previous_applications.year_data
+    ):
+        result["historical_data"] = []
+
+        for year_data in sorted(
+            course_data.previous_applications.year_data,
+            key=lambda y: y.year,
+            reverse=True,
+        ):
+            year_entry = {"year": year_data.year, "phase1": None, "phase2": None}
+
+            # Phase 1
+            for num in [1, 2]:
+                if (year_data.phase1 and num == 1) or (year_data.phase2 and num == 2):
+                    p = year_data.phase1 if num == 1 else year_data.phase2
+                    phase_data = {
+                        "vacancies": p.vacancies,
+                        "grade_last": p.grade_last,
+                    }
+
+                    if p.candidates:
+                        phase_data["candidates"] = {
+                            "total": p.candidates.total,
+                            "fem": p.candidates.fem,
+                            "masc": p.candidates.masc,
+                            "first_option": p.candidates.first_option,
+                        }
+
+                    if p.placed:
+                        phase_data["placed"] = {
+                            "total": p.placed.total,
+                            "fem": p.placed.fem,
+                            "masc": p.placed.masc,
+                            "first_option": p.placed.first_option,
+                        }
+
+                    if p.averages:
+                        phase_data["averages"] = {
+                            "application_grade": p.averages.application_grade,
+                            "entrance_exams": p.averages.entrance_exams,
+                            "hs_average": p.averages.hs_average,
+                        }
+
+                    year_entry[f"phase{num}"] = phase_data
+
+            result["historical_data"].append(year_entry)
+
+    return result
+
+
 if __name__ == "__main__":
-    course_data = get_full_course_data()
+    course_data = get_full_course_data()[:1]
     print("Course data retrieved successfully.")
     if course_data:
         for course in course_data:

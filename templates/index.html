@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>DGES Course Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=rethink-sans:400&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <header>
+        <h1>DGES Course Explorer</h1>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <h2>Search Courses</h2>
+            <form action="/search" method="GET">
+                <input type="text" name="query" placeholder="Course name here...">
+                <button type="submit">Search</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        The search functionality is extremey basic and this website is currently very experimental D:
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
