@@ -291,12 +291,13 @@ def course_data_to_dict(course_data):
         }
 
         for bundle in ee.exams:
-            exam_bundle = {
-                "exams": [
-                    {"code": exam.code, "name": exam.name} for exam in bundle.exams
-                ]
-            }
-            result["entrance_exams"]["bundles"].append(exam_bundle)
+            if bundle.exams:
+                exam_bundle = {
+                    "exams": [
+                        {"code": exam.code, "name": exam.name} for exam in bundle.exams
+                    ]
+                }
+                result["entrance_exams"]["bundles"].append(exam_bundle)
 
     # Minimum classification
     if course_data.min_classification:

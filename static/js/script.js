@@ -7,13 +7,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.createElement('section');
     resultsContainer.className = 'results-section';
     mainElement.appendChild(resultsContainer);
+    let lastSearchQuery = '';
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('search')) {
+        const searchQuery = url.searchParams.get('search');
+        searchInput.value = searchQuery;
+        
+        search().then(() => {
+            const fragment = decodeURIComponent(location.hash.slice(1));
+            if (fragment) {
+                const element = document.getElementById(`course-${fragment}`);
+                if (element && element.classList.contains('course-card')) {
+                    element.classList.add('expanded');
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    }
     
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        await search();
+    });
+
+    async function search() {
         const searchQuery = searchInput.value.trim();
         if (!searchQuery) return;
-        
+
+        lastSearchQuery = searchQuery;
+
         // Show loading state
         resultsContainer.innerHTML = '<div class="loading">Searching courses...</div>';
         
@@ -45,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }
-    });
+    }
     
     function displayResults(courses) {
         if (!courses || courses.length === 0) {
@@ -57,15 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
             <h2>Search Results</h2>
             <div class="courses-list">
         `;
-        
+        let counter = 0;
+
         courses.forEach(course => {
             // Extract data from course object
             const courseInfo = course.course || {};
             const institution = courseInfo.institution || {};
             const characteristics = course.characteristics || {};
+            counter += 1;
             
             resultsHTML += `
-                <div class="course-card">
+                <div class="course-card" id="course-${counter}">
                     <div class="course-header" onclick="this.parentElement.classList.toggle('expanded')">
                         <div class="course-title">
                             <h3>${courseInfo.id || ''} ${courseInfo.name || 'Untitled Course'}</h3>
@@ -176,17 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (course.calculation_formula) {
             html += `<div class="details-section">
                 <h4>Calculation Formula</h4>
-                <div class="formula-container">
+                <div class="details-grid">
                     ${course.calculation_formula.hs_average ? 
-                      `<div class="formula-item">
-                         <div class="formula-value">${course.calculation_formula.hs_average}%</div>
-                         <div class="formula-label">High School</div>
-                       </div>` : ''}
+                      `<div class="detail-item"><span>High School:</span> ${course.calculation_formula.hs_average}%</div>` : ''}
                     ${course.calculation_formula.entrance_exams ? 
-                      `<div class="formula-item">
-                         <div class="formula-value">${course.calculation_formula.entrance_exams}%</div>
-                         <div class="formula-label">Entrance Exams</div>
-                       </div>` : ''}
+                      `<div class="detail-item"><span>Entrance Exams:</span> ${course.calculation_formula.entrance_exams}%</div>` : ''}
                 </div>
             </div>`;
         }

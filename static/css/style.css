@@ -35,7 +35,6 @@ header {
   width: 100%;
   padding: 2.5rem 1rem 1.5rem;
   text-align: center;
-  /* Removed background and shadow */
 }
 
 header h1 {
@@ -43,13 +42,14 @@ header h1 {
   font-weight: 700;
   font-size: 2.2rem;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 10px rgba(203, 166, 247, 0.2); /* Subtle text shadow for depth */
+  text-shadow: 0 2px 10px rgba(203, 166, 247, 0.2);
 }
 
 main {
   width: 100%;
   max-width: 1000px;
   padding: 2rem 1rem;
+  padding-top: 0;
   flex: 1;
 }
 
@@ -59,6 +59,7 @@ main {
   padding: 2.5rem;
   box-shadow: 0 8px 24px var(--ctp-shadow);
   margin: 2rem auto;
+  margin-top: 0;
   max-width: 700px;
 }
 
@@ -175,18 +176,6 @@ form:focus-within {
   gap: 1.5rem;
 }
 
-.course-card {
-  background: var(--ctp-surface0);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px var(--ctp-shadow);
-}
-
-.course-card:hover {
-  box-shadow: 0 8px 24px var(--ctp-shadow);
-}
-
 .course-card h3 {
   color: var(--ctp-blue);
   margin-bottom: 0.5rem;
@@ -224,14 +213,10 @@ form:focus-within {
 .courses-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.course-card {
   background: var(--ctp-surface0);
   border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 12px var(--ctp-shadow);
 }
 
@@ -301,7 +286,7 @@ form:focus-within {
   overflow: hidden;
   transition: max-height 0.5s ease;
   background: var(--ctp-base);
-  border-top: 1px solid var(--ctp-surface1);
+  border-top: 2px solid var(--ctp-surface1);
   padding: 0 1.5rem;
 }
 
@@ -397,33 +382,6 @@ form:focus-within {
   padding: 0.5rem 0;
   color: var(--ctp-lavender);
   font-weight: 600;
-}
-
-/* Formula display */
-.formula-container {
-  display: flex;
-  gap: 1.5rem;
-  margin-top: 0.5rem;
-}
-
-.formula-item {
-  text-align: center;
-  background: var(--ctp-surface0);
-  padding: 1rem;
-  border-radius: 8px;
-  min-width: 100px;
-}
-
-.formula-value {
-  color: var(--ctp-blue);
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.formula-label {
-  color: var(--ctp-subtext0);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
 }
 
 /* Historical data tabs */
