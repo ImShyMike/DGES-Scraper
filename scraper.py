@@ -525,6 +525,7 @@ for n, course in enumerate(courses):
                 continue
 
             exam_code, exam_name = exam_lst
+            exam_name = exam_name.split(" (", 1)[0].strip()
             exams.append(Exam(name=exam_name, code=exam_code))
             exams_data.append(Exam(name=exam_name, code=exam_code))
 

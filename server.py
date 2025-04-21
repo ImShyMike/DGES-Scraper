@@ -1,10 +1,12 @@
 """Website backend for course search."""
 
+from datetime import datetime
+
 from flask import Flask, jsonify, render_template, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from query import course_data_to_dict, get_full_course_data
+from query import course_data_to_dict, full_search
 
 app = Flask(__name__)
 limiter = Limiter(
@@ -13,20 +15,19 @@ limiter = Limiter(
     default_limits=["2 per second"],
 )
 
+
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    """Main page."""
+    return render_template("index.html", datetime=datetime.now())
 
 
-@app.route("/search", methods=["POST"])
+@app.route("/api/search", methods=["POST"])
 @limiter.limit("30 per minute")
 def search():
-    course_name = request.form.get("name")
-    if not course_name:
-        return jsonify({"error": "Course code is required"}), 400
-
+    """Seach endpoint for course data."""
     try:
-        course_data = get_full_course_data(course_name=course_name, limit=25)
+        course_data = full_search(request.form)
         course_dicts = [course_data_to_dict(course) for course in course_data]
         return jsonify(course_dicts)
     except Exception as e:

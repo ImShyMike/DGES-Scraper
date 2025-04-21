@@ -16,12 +16,359 @@
 
     <main>
         <section class="search-section">
-            <h2>Search Courses</h2>
-            <form action="/search" method="GET">
-                <input type="text" name="query" placeholder="Course name here...">
-                <button type="submit">Search</button>
-            </form>
+            <div class="search-header">
+                <h2>Search Courses</h2>
+                <button id="advanced-search-toggle">Advanced Mode</button>
+            </div>
+            <div id="search-bar">
+                <form id="basic-search-form" action="/search" method="GET">
+                    <input id="basic-name" type="text" name="course_name" placeholder="Course name here...">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <div id="advanced-search" class="hidden">
+                <form id="advanced-search-form" action="/search" method="GET">
+                    <div class="search-options">
+                        <div class="search-option">
+                            <label for="results_per_page">Results per page:</label>
+                            <select id="results_per_page" name="results_per_page">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="search-option">
+                            <label for="sort_by">Sort by:</label>
+                            <select id="sort_by" name="sort_by">
+                                <option value="course_id">Course ID</option>
+                                <option value="name_asc">Course Name (A-Z)</option>
+                                <option value="institution_asc">Institution (A-Z)</option>
+                                <option value="grade_asc">Last Admission Grade (Low to High)</option>
+                                <option value="grade_desc">Last Admission Grade (High to Low)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Basic Information</h3>
+                        <div class="form-row">
+                            <label for="course_id">Course ID:</label>
+                            <select name="course_id_operator" class="operator-select">
+                                <option value="exact">is exactly</option>
+                                <option value="contains">contains</option>
+                                <option value="starts_with">starts with</option>
+                            </select>
+                            <input type="text" id="course_id" name="course_id">
+                        </div>
+                        <div class="form-row">
+                            <label for="course_name">Course Name:</label>
+                            <select name="course_name_operator" class="operator-select">
+                                <option value="contains">contains</option>
+                                <option value="exact">is exactly</option>
+                                <option value="starts_with">starts with</option>
+                            </select>
+                            <input type="text" id="course_name" name="course_name">
+                        </div>
+                        <div class="form-row">
+                            <label for="institution_id">Institution ID:</label>
+                            <select name="institution_id_operator" class="operator-select">
+                                <option value="exact">is exactly</option>
+                                <option value="contains">contains</option>
+                            </select>
+                            <input type="text" id="institution_id" name="institution_id">
+                        </div>
+                        <div class="form-row">
+                            <label for="institution_name">Institution Name:</label>
+                            <select name="institution_name_operator" class="operator-select">
+                                <option value="contains">contains</option>
+                                <option value="exact">is exactly</option>
+                                <option value="starts_with">starts with</option>
+                            </select>
+                            <input type="text" id="institution_name" name="institution_name">
+                        </div>
+                        <div class="form-row">
+                            <label for="unique_id">Unique Course ID:</label>
+                            <input type="text" id="unique_id" name="unique_id">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Characteristics</h3>
+                        <div class="form-row">
+                            <label for="degree">Degree Type:</label>
+                            <select id="degree" name="degree" multiple>
+                                <option value="">Any</option>
+                                <option value="Licenciatura - 1º ciclo">Licenciatura - 1º ciclo</option>
+                                <option value="Mestrado Integrado">Mestrado Integrado</option>
+                                <option value="Preparatórios de Mestrado Integrado">Preparatórios de Mestrado Integrado</option>
+                                <option value="Preparatórios de licenciatura - 1º ciclo">Preparatórios de licenciatura - 1º ciclo</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="cnaef">CNAEF Area:</label>
+                            <select id="cnaef" name="cnaef" multiple>
+                                <option value="">Any</option>
+                                <option value="142 Ciências da Educação">142 Ciências da Educação</option>
+                                <option value="144 Formação de Professores do Ensino Básico (1.º e 2.º Ciclos)">144 Formação de Professores do Ensino Básico (1.º e 2.º Ciclos)</option>
+                                <option value="146 Formação de Professores e Formadores de Áreas Tecnológicas">146 Formação de Professores e Formadores de Áreas Tecnológicas</option>
+                                <option value="210 Artes">210 Artes</option>
+                                <option value="211 Belas-Artes">211 Belas-Artes</option>
+                                <option value="212 Artes do Espetáculo">212 Artes do Espetáculo</option>
+                                <option value="213 Áudio-Visuais e Produção dos Media">213 Áudio-Visuais e Produção dos Media</option>
+                                <option value="214 Design">214 Design</option>
+                                <option value="215 Artesanato">215 Artesanato</option>
+                                <option value="221 Religião e Teologia">221 Religião e Teologia</option>
+                                <option value="222 Línguas e Literaturas Estrangeiras">222 Línguas e Literaturas Estrangeiras</option>
+                                <option value="223 Língua e Literatura Materna">223 Língua e Literatura Materna</option>
+                                <option value="225 História e Arqueologia">225 História e Arqueologia</option>
+                                <option value="226 Filosofia e Ética">226 Filosofia e Ética</option>
+                                <option value="229 Humanidades - programas não classificados noutra área de formação">229 Humanidades - programas não classificados noutra área de formação</option>
+                                <option value="310 Ciências Sociais e do Comportamento">310 Ciências Sociais e do Comportamento</option>
+                                <option value="311 Psicologia">311 Psicologia</option>
+                                <option value="312 Sociologia e Outros Estudos">312 Sociologia e Outros Estudos</option>
+                                <option value="313 Ciência Política e Cidadania">313 Ciência Política e Cidadania</option>
+                                <option value="314 Economia">314 Economia</option>
+                                <option value="320 Informação e Jornalismo">320 Informação e Jornalismo</option>
+                                <option value="321 Jornalismo e Reportagem">321 Jornalismo e Reportagem</option>
+                                <option value="322 Biblioteconomia, Arquivo e Documentação (BAD)">322 Biblioteconomia, Arquivo e Documentação (BAD)</option>
+                                <option value="340 Ciências Empresariais">340 Ciências Empresariais</option>
+                                <option value="341 Comércio">341 Comércio</option>
+                                <option value="342 Marketing e Publicidade">342 Marketing e Publicidade</option>
+                                <option value="343 Finanças, Banca e Seguros">343 Finanças, Banca e Seguros</option>
+                                <option value="344 Contabilidade e Fiscalidade">344 Contabilidade e Fiscalidade</option>
+                                <option value="345 Gestão e Administração">345 Gestão e Administração</option>
+                                <option value="346 Secretariado e Trabalho Administrativo">346 Secretariado e Trabalho Administrativo</option>
+                                <option value="347 Enquadramento na Organização/Empresa">347 Enquadramento na Organização/Empresa</option>
+                                <option value="349 Ciências Empresariais - programas não classificados noutra área de formação">349 Ciências Empresariais - programas não classificados noutra área de formação</option>
+                                <option value="380 Direito">380 Direito</option>
+                                <option value="420 Ciências da Vida">420 Ciências da Vida</option>
+                                <option value="421 Biologia e Bioquímica">421 Biologia e Bioquímica</option>
+                                <option value="422 Ciências do Ambiente">422 Ciências do Ambiente</option>
+                                <option value="429 Ciências da Vida - programas não classificados noutra área de formação">429 Ciências da Vida - programas não classificados noutra área de formação</option>
+                                <option value="441 Física">441 Física</option>
+                                <option value="442 Química">442 Química</option>
+                                <option value="443 Ciências da Terra">443 Ciências da Terra</option>
+                                <option value="460 Matemática e Estatística">460 Matemática e Estatística</option>
+                                <option value="461 Matemática">461 Matemática</option>
+                                <option value="462 Estatística">462 Estatística</option>
+                                <option value="480 Informática">480 Informática</option>
+                                <option value="481 Ciências Informáticas">481 Ciências Informáticas</option>
+                                <option value="520 Engenharia e Técnicas Afins">520 Engenharia e Técnicas Afins</option>
+                                <option value="521 Metalurgia e Metalomecânica">521 Metalurgia e Metalomecânica</option>
+                                <option value="522 Eletricidade e Energia">522 Eletricidade e Energia</option>
+                                <option value="523 Eletrónica e Automação">523 Eletrónica e Automação</option>
+                                <option value="524 Tecnologia dos Processos Químicos">524 Tecnologia dos Processos Químicos</option>
+                                <option value="525 Construção e Reparação de Veículos a Motor">525 Construção e Reparação de Veículos a Motor</option>
+                                <option value="529 Engenharia e Técnicas Afins - programas não classificados noutra área de formação">529 Engenharia e Técnicas Afins - programas não classificados noutra área de formação</option>
+                                <option value="541 Indústrias Alimentares">541 Indústrias Alimentares</option>
+                                <option value="542 Indústrias do Têxtil, Vestuário, Calçado e Couro">542 Indústrias do Têxtil, Vestuário, Calçado e Couro</option>
+                                <option value="543 Materiais (Indústrias da Madeira, Cortiça, Papel, Plástico, Vidro e outros)">543 Materiais (Indústrias da Madeira, Cortiça, Papel, Plástico, Vidro e outros)</option>
+                                <option value="544 Indústrias Extrativas">544 Indústrias Extrativas</option>
+                                <option value="581 Arquitetura e Urbanismo">581 Arquitetura e Urbanismo</option>
+                                <option value="582 Construção Civil e Engenharia Civil">582 Construção Civil e Engenharia Civil</option>
+                                <option value="620 Agricultura, Silvicultura e Pescas">620 Agricultura, Silvicultura e Pescas</option>
+                                <option value="621 Produção Agrícola e Animal">621 Produção Agrícola e Animal</option>
+                                <option value="623 Silvicultura e Caça">623 Silvicultura e Caça</option>
+                                <option value="640 Ciências Veterinárias">640 Ciências Veterinárias</option>
+                                <option value="720 Saúde">720 Saúde</option>
+                                <option value="721 Medicina">721 Medicina</option>
+                                <option value="723 Enfermagem">723 Enfermagem</option>
+                                <option value="724 Ciências Dentárias">724 Ciências Dentárias</option>
+                                <option value="725 Tecnologias de Diagnóstico e Terapêutica">725 Tecnologias de Diagnóstico e Terapêutica</option>
+                                <option value="726 Terapia e Reabilitação">726 Terapia e Reabilitação</option>
+                                <option value="727 Ciências Farmacêuticas">727 Ciências Farmacêuticas</option>
+                                <option value="729 Saúde - programas não classificados noutra área de formação">729 Saúde - programas não classificados noutra área de formação</option>
+                                <option value="762 Trabalho Social e Orientação">762 Trabalho Social e Orientação</option>
+                                <option value="811 Hotelaria e Restauração">811 Hotelaria e Restauração</option>
+                                <option value="812 Turismo e Lazer">812 Turismo e Lazer</option>
+                                <option value="813 Desporto">813 Desporto</option>
+                                <option value="840 Serviços de Transporte">840 Serviços de Transporte</option>
+                                <option value="851 Tecnologia de Proteção do Ambiente">851 Tecnologia de Proteção do Ambiente</option>
+                                <option value="852 Ambientes Naturais e Vida Selvagem">852 Ambientes Naturais e Vida Selvagem</option>
+                                <option value="853 Serviços de Saúde Pública">853 Serviços de Saúde Pública</option>
+                                <option value="861 Proteção de Pessoas e Bens">861 Proteção de Pessoas e Bens</option>
+                                <option value="862 Segurança e Higiene no Trabalho">862 Segurança e Higiene no Trabalho</option>
+                                <option value="863 Segurança Militar">863 Segurança Militar</option>
+                                <option value="999 Desconhecido ou não especificado">999 Desconhecido ou não especificado</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="duration">Duration:</label>
+                            <select id="duration" name="duration" multiple>
+                                <option value="">Any</option>
+                                <option value="4 Anos">4 Anos</option>
+                                <option value="6 Semestres">6 Semestres</option>
+                                <option value="3 Anos">3 Anos</option>
+                                <option value="10 Semestres">10 Semestres</option>
+                                <option value="5 Anos">5 Anos</option>
+                                <option value="8 Semestres">8 Semestres</option>
+                                <option value="6 semestres">6 semestres</option>
+                                <option value="4 Semestres">4 Semestres</option>
+                                <option value="3 anos">3 anos</option>
+                                <option value="6 ou 10 Semestres">6 ou 10 Semestres</option>
+                                <option value="3 Semestres">3 Semestres</option>
+                                <option value="6 Anos">6 Anos</option>
+                                <option value="12 Semestres">12 Semestres</option>
+                                <option value="11 Semestres">11 Semestres</option>
+                                <option value="12 Trimestres">12 Trimestres</option>
+                                <option value="7 Semestres">7 Semestres</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="ects">ECTS Credits:</label>
+                            <select name="ects_operator" class="operator-select">
+                                <option value="equal">equal to</option>
+                                <option value="less">less than</option>
+                                <option value="greater">greater than</option>
+                                <option value="between">between</option>
+                            </select>
+                            <div class="range-inputs">
+                                <input type="number" id="ects" name="ects" min="0" max="300">
+                                <input type="number" id="ects_max" name="ects_max" class="hidden" min="0" max="300">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="type">Teaching Type:</label>
+                            <select id="type" name="type" multiple>
+                                <option value="">Any</option>
+                                <option value="Presencial">Presencial</option>
+                                <option value="A distância">A distância</option>
+                                <option value="Misto">Misto</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="competition">Competition Type:</label>
+                            <select id="competition" name="competition" multiple>
+                                <option value="">Any</option>
+                                <option value="Concurso Nacional">Concurso Nacional</option>
+                                <option value="Concurso Local">Concurso Local</option>
+                                <option value="Concurso Institucional">Concurso Institucional</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="vacancies">Current Vacancies:</label>
+                            <select name="vacancies_operator" class="operator-select">
+                                <option value="equal">equal to</option>
+                                <option value="less">less than</option>
+                                <option value="greater">greater than</option>
+                                <option value="between">between</option>
+                                <option value="available">available (>0)</option>
+                            </select>
+                            <div class="range-inputs">
+                                <input type="number" id="vacancies" name="vacancies" min="0">
+                                <input type="number" id="vacancies_max" name="vacancies_max" class="hidden" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Entrance Exams</h3>
+                        <div class="form-row">
+                            <label for="exam_code">Exam Code:</label>
+                            <select id="exam_code" name="exam_code" multiple>
+                                <option value="">Any</option>
+                                <option value="01">01 - Alemão</option>
+                                <option value="02">02 - Biologia e Geologia</option>
+                                <option value="03">03 - Desenho</option>
+                                <option value="04">04 - Economia</option>
+                                <option value="05">05 - Espanhol</option>
+                                <option value="06">06 - Filosofia</option>
+                                <option value="07">07 - Física e Química</option>
+                                <option value="08">08 - Francês</option>
+                                <option value="09">09 - Geografia</option>
+                                <option value="10">10 - Geometria Descritiva</option>
+                                <option value="11">11 - História</option>
+                                <option value="12">12 - História da Cultura e Artes</option>
+                                <option value="13">13 - Inglês</option>
+                                <option value="14">14 - Latim</option>
+                                <option value="15">15 - Literatura Portuguesa</option>
+                                <option value="16">16 - Matemática</option>
+                                <option value="17">17 - Mat. Apl. Ciências Soc.</option>
+                                <option value="18">18 - Português</option>
+                                <option value="19">19 - Matemática A</option>
+                                <option value="20">20 - Mandarim</option>
+                                <option value="21">21 - Italiano</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="exam_combination">Exam Combination:</label>
+                            <select id="exam_combination" name="exam_combination">
+                                <option value="any">Any of selected</option>
+                                <option value="all">All of selected</option>
+                                <option value="only">Only these selected</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Classification</h3>
+                        <div class="form-row">
+                            <label for="min_app_grade">Minimum Application Grade:</label>
+                            <select name="min_app_grade_operator" class="operator-select">
+                                <option value="equal">equal to</option>
+                                <option value="less">less than</option>
+                                <option value="greater">greater than</option>
+                                <option value="between">between</option>
+                            </select>
+                            <div class="range-inputs">
+                                <input type="number" id="min_app_grade" name="min_app_grade" step="0.1" min="0" max="200">
+                                <input type="number" id="min_app_grade_max" name="min_app_grade_max" class="hidden" step="0.1" min="0" max="200">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="min_exam_grade">Minimum Exam Grade:</label>
+                            <select name="min_exam_grade_operator" class="operator-select">
+                                <option value="equal">equal to</option>
+                                <option value="less">less than</option>
+                                <option value="greater">greater than</option>
+                                <option value="between">between</option>
+                            </select>
+                            <div class="range-inputs">
+                                <input type="number" id="min_exam_grade" name="min_exam_grade" step="0.1" min="0" max="200">
+                                <input type="number" id="min_exam_grade_max" name="min_exam_grade_max" class="hidden" step="0.1" min="0" max="200">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Regional Preference</h3>
+                        <div class="form-row">
+                            <label for="region">Region:</label>
+                            <select id="region" name="region" multiple>
+                                <option value="">Any</option>
+                                <option value="Aveiro">Aveiro</option>
+                                <option value="Beja">Beja</option>
+                                <option value="Braga">Braga</option>
+                                <option value="Bragança">Bragança</option>
+                                <option value="Castelo Branco">Castelo Branco</option>
+                                <option value="Coimbra">Coimbra</option>
+                                <option value="Évora">Évora</option>
+                                <option value="Faro">Faro</option>
+                                <option value="Guarda">Guarda</option>
+                                <option value="Leiria">Leiria</option>
+                                <option value="Lisboa">Lisboa</option>
+                                <option value="Portalegre">Portalegre</option>
+                                <option value="Porto">Porto</option>
+                                <option value="R. A. Açores">R. A. Açores</option>
+                                <option value="R. A. Madeira">R. A. Madeira</option>
+                                <option value="Santarém">Santarém</option>
+                                <option value="Setúbal">Setúbal</option>
+                                <option value="Viana do Castelo">Viana do Castelo</option>
+                                <option value="Vila Real">Vila Real</option>
+                                <option value="Viseu">Viseu</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit">Search</button>
+                        <button type="reset">Clear Form</button>
+                    </div>
+                </form>
+            </div>
         </section>
+        <section class="results-section"></section>
     </main>
 
     <footer>

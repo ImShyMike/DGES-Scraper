@@ -1,20 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.querySelector('form[action="/search"]');
-    const searchInput = document.querySelector('input[name="query"]');
-    const mainElement = document.querySelector('main');
+    const searchInput = document.getElementById('basic-name');
+    const resultsContainer = document.querySelector('.results-section');
+    const advancedSearchToggle = document.getElementById('advanced-search-toggle');
+    const basicSearchBar = document.getElementById('search-bar');
+    const advancedSearch = document.getElementById('advanced-search');
+    const advancedSearchForm = document.getElementById('advanced-search-form');
     
-    // Create a results container that will be populated after search
-    const resultsContainer = document.createElement('section');
-    resultsContainer.className = 'results-section';
-    mainElement.appendChild(resultsContainer);
+    advancedSearchToggle.addEventListener('click', function() {
+        basicSearchBar.classList.toggle('hidden');
+        advancedSearch.classList.toggle('hidden');
+        
+        if (advancedSearch.classList.contains('hidden')) {
+            advancedSearchToggle.textContent = 'Advanced Mode';
+        } else {
+            advancedSearchToggle.textContent = 'Simple Mode';
+        }
+    });
+
+    // Handle operator changes
+    const operatorSelects = document.querySelectorAll('.operator-select');
+    operatorSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const rangeInputs = this.nextElementSibling;
+            const maxInput = rangeInputs.querySelector('input[id$="_max"]');
+            
+            if (this.value === 'between') {
+                maxInput.classList.remove('hidden');
+            } else {
+                maxInput.classList.add('hidden');
+            }
+        });
+    });
+
     let lastSearchQuery = '';
 
     const url = new URL(window.location.href);
     if (url.searchParams.has('search')) {
         const searchQuery = url.searchParams.get('search');
-        searchInput.value = searchQuery;
-        
-        search().then(() => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('course_name', searchQuery);
+
+        search(searchParams).then(() => {
             const fragment = decodeURIComponent(location.hash.slice(1));
             if (fragment) {
                 const element = document.getElementById(`course-${fragment}`);
@@ -26,28 +53,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    searchForm.addEventListener('submit', async (e) => {
+    advancedSearchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        await search();
+        const formData = new FormData(advancedSearchForm);
+        const searchParams = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                searchParams.append(key, value);
+            }
+        }
+
+        await search(searchParams);
     });
 
-    async function search() {
+    searchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
         const searchQuery = searchInput.value.trim();
         if (!searchQuery) return;
 
         lastSearchQuery = searchQuery;
 
+        const searchParams = new URLSearchParams();
+        searchParams.append('course_name', searchQuery);
+        
+        await search(searchParams);
+    });
+
+    async function search(searchParams) {
         // Show loading state
         resultsContainer.innerHTML = '<div class="loading">Searching courses...</div>';
         
         try {
-            const response = await fetch('/search', {
+            const response = await fetch('/api/search', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `name=${encodeURIComponent(searchQuery)}`
+                body: searchParams.toString()
             });
             
             const data = await response.json();
@@ -111,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${characteristics.type ? `<div class="detail-item"><span>Type:</span> ${characteristics.type}</div>` : ''}
                                 ${characteristics.competition ? `<div class="detail-item"><span>Competition:</span> ${characteristics.competition}</div>` : ''}
                                 ${characteristics.current_vacancies ? `<div class="detail-item"><span>Vacancies:</span> ${characteristics.current_vacancies}</div>` : ''}
+                                ${course.id ? `<div class="detail-item"><span>Unique ID:</span> ${course.id}</div>` : ''}
                             </div>
                         </div>
                         
@@ -193,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${course.prerequisites.type ? 
                       `<div class="detail-item"><span>Type:</span> ${course.prerequisites.type}</div>` : ''}
                     ${course.prerequisites.group ? 
-                      `<div class="detail-item"><span>Group:</span> ${course.prerequisites.group}</div>` : ''}
+                      `<div class="detail-item"><span>Group:</span> <a href="https://www.dges.gov.pt/guias/preq_grupo.asp?pr=${course.prerequisites.group}">${course.prerequisites.group}</a></div>` : ''}
                 </div>
             </div>`;
         }

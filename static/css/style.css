@@ -53,6 +53,27 @@ main {
   flex: 1;
 }
 
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+a:link {
+  color: var(--ctp-blue);
+  text-decoration: none;
+}
+
+a:visited {
+  color: var(--ctp-blue);
+}
+
+a:hover {
+  color: var(--ctp-lavender);
+  text-decoration: underline;
+}
+
 .search-section {
   background-color: var(--ctp-surface0);
   border-radius: 16px;
@@ -65,12 +86,38 @@ main {
 
 .search-section h2 {
   color: var(--ctp-blue);
-  margin-bottom: 1.5rem;
   font-weight: 600;
   font-size: 1.5rem;
 }
 
-form {
+.hidden {
+  display: none;
+}
+
+.search-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+#advanced-search-toggle {
+  background: var(--ctp-surface1);
+  color: var(--ctp-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#advanced-search-toggle:hover {
+  background: var(--ctp-lavender);
+  color: var(--ctp-base);
+}
+
+#basic-search-form {
   display: flex;
   position: relative;
   height: 56px;
@@ -79,7 +126,7 @@ form {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-input[type="text"] {
+input, select {
   flex: 1;
   padding: 0 24px;
   border: none;
@@ -89,11 +136,11 @@ input[type="text"] {
   z-index: 1;
 }
 
-input[type="text"]:focus {
+input:focus {
   outline: none;
 }
 
-input[type="text"]::placeholder {
+input::placeholder {
   color: var(--ctp-subtext0);
 }
 
@@ -113,7 +160,7 @@ button:hover {
 }
 
 /* Focus style for the entire form */
-form:focus-within {
+#basic-search-form:focus-within {
   outline: 2px solid var(--ctp-lavender);
   box-shadow: 0 0 0 4px rgba(180, 190, 254, 0.2);
 }
@@ -125,7 +172,7 @@ form:focus-within {
     border-radius: 16px;
   }
   
-  input[type="text"] {
+  input {
     padding: 16px 24px;
     border-radius: 16px 16px 0 0;
   }
@@ -353,7 +400,6 @@ form:focus-within {
   background: var(--ctp-surface0);
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
-  margin-bottom: 0.75rem;
 }
 
 .exam-item {
@@ -531,4 +577,53 @@ form:focus-within {
   .stat-item {
     min-width: 100%;
   }
+}
+
+/* Advanced Search Form Styling */
+.form-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--ctp-surface1);
+}
+
+.form-section h3 {
+    margin-bottom: 10px;
+    color: var(--ctp-mauve);
+}
+
+.form-row {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.form-row label {
+    width: 180px;
+    font-weight: bold;
+}
+
+.form-row input, .form-row select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--ctp-surface1);
+    border-radius: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-actions button {
+    padding: 10px 15px;
+    background-color: var(--ctp-green);
+    color: var(--ctp-base);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-actions button[type="reset"] {
+    background-color: var(--ctp-peach);
 }
