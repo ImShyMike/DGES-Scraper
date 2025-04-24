@@ -31,6 +31,7 @@ def search():
         course_dicts = [course_data_to_dict(course) for course in course_data]
         return jsonify(course_dicts)
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 

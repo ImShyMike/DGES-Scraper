@@ -19,6 +19,9 @@ from models import (
     PreviousApplications,
     RegionalPreference,
     YearData,
+    Characteristics,
+    MinimumClassification,
+    Averages,
     engine,
 )
 
@@ -226,16 +229,22 @@ def full_search(config: dict) -> Sequence[CourseData]:
                 query = query.where(CourseData.characteristics.has(ECTS=params["ects"]))
             elif params["ects_operator"] == "less":
                 query = query.where(
-                    CourseData.characteristics.has(ECTS < float(params["ects"]))
+                    CourseData.characteristics.has(
+                        Characteristics.ECTS < float(params["ects"])
+                    )
                 )
             elif params["ects_operator"] == "greater":
                 query = query.where(
-                    CourseData.characteristics.has(ECTS > float(params["ects"]))
+                    CourseData.characteristics.has(
+                        Characteristics.ECTS > float(params["ects"])
+                    )
                 )
             elif params["ects_operator"] == "between" and params["ects_max"]:
                 query = query.where(
                     CourseData.characteristics.has(
-                        ECTS.between(float(params["ects"]), float(params["ects_max"]))
+                        Characteristics.ECTS.between(
+                            float(params["ects"]), float(params["ects_max"])
+                        )
                     )
                 )
 
@@ -257,26 +266,26 @@ def full_search(config: dict) -> Sequence[CourseData]:
             elif params["vacancies_operator"] == "less":
                 query = query.where(
                     CourseData.characteristics.has(
-                        current_vacancies < int(params["vacancies"])
+                        Characteristics.current_vacancies < int(params["vacancies"])
                     )
                 )
             elif params["vacancies_operator"] == "greater":
                 query = query.where(
                     CourseData.characteristics.has(
-                        current_vacancies > int(params["vacancies"])
+                        Characteristics.current_vacancies > int(params["vacancies"])
                     )
                 )
             elif params["vacancies_operator"] == "between" and params["vacancies_max"]:
                 query = query.where(
                     CourseData.characteristics.has(
-                        current_vacancies.between(
+                        Characteristics.current_vacancies.between(
                             int(params["vacancies"]), int(params["vacancies_max"])
                         )
                     )
                 )
             elif params["vacancies_operator"] == "available":
                 query = query.where(
-                    CourseData.characteristics.has(current_vacancies > 0)
+                    CourseData.characteristics.has(Characteristics.current_vacancies > 0)
                 )
 
         # Entrance exam filters
@@ -326,13 +335,13 @@ def full_search(config: dict) -> Sequence[CourseData]:
             elif params["min_app_grade_operator"] == "less":
                 query = query.where(
                     CourseData.min_classification.has(
-                        application_grade < float(params["min_app_grade"])
+                        MinimumClassification.application_grade < float(params["min_app_grade"])
                     )
                 )
             elif params["min_app_grade_operator"] == "greater":
                 query = query.where(
                     CourseData.min_classification.has(
-                        application_grade > float(params["min_app_grade"])
+                        MinimumClassification.application_grade > float(params["min_app_grade"])
                     )
                 )
             elif (
@@ -341,7 +350,7 @@ def full_search(config: dict) -> Sequence[CourseData]:
             ):
                 query = query.where(
                     CourseData.min_classification.has(
-                        application_grade.between(
+                        MinimumClassification.application_grade.between(
                             float(params["min_app_grade"]),
                             float(params["min_app_grade_max"]),
                         )
@@ -358,13 +367,13 @@ def full_search(config: dict) -> Sequence[CourseData]:
             elif params["min_exam_grade_operator"] == "less":
                 query = query.where(
                     CourseData.min_classification.has(
-                        entrance_exams < float(params["min_exam_grade"])
+                        MinimumClassification.entrance_exams < float(params["min_exam_grade"])
                     )
                 )
             elif params["min_exam_grade_operator"] == "greater":
                 query = query.where(
                     CourseData.min_classification.has(
-                        entrance_exams > float(params["min_exam_grade"])
+                        MinimumClassification.entrance_exams > float(params["min_exam_grade"])
                     )
                 )
             elif (
@@ -373,7 +382,7 @@ def full_search(config: dict) -> Sequence[CourseData]:
             ):
                 query = query.where(
                     CourseData.min_classification.has(
-                        entrance_exams.between(
+                        MinimumClassification.entrance_exams.between(
                             float(params["min_exam_grade"]),
                             float(params["min_exam_grade_max"]),
                         )
@@ -505,9 +514,7 @@ def full_search(config: dict) -> Sequence[CourseData]:
                     .join(Course.institution)
                     .order_by(Institution.name.asc())
                 )
-            elif params["sort_by"] == "grade_asc" or params["sort_by"] == "grade_desc":
-                sort_direction = "asc" if params["sort_by"] == "grade_asc" else "desc"
-
+            elif params["sort_by"] in ("grade_asc", "grade_desc"):
                 phase_preference = params.get("grade_sort_phase", "1")
                 year_preference = params.get("grade_sort_year", "latest")
 
@@ -519,16 +526,50 @@ def full_search(config: dict) -> Sequence[CourseData]:
 
                 if phase_preference == "1":
                     query = query.outerjoin(YearData.phase1)
-                    if sort_direction == "asc":
+                    if params["sort_by"]  == "grade_asc":
                         query = query.order_by(PhaseData.grade_last.asc().nullslast())
                     else:
                         query = query.order_by(PhaseData.grade_last.desc().nullslast())
                 elif phase_preference == "2":
                     query = query.outerjoin(YearData.phase2)
-                    if sort_direction == "asc":
+                    if params["sort_by"]  == "grade_asc":
                         query = query.order_by(PhaseData.grade_last.asc().nullslast())
                     else:
                         query = query.order_by(PhaseData.grade_last.desc().nullslast())
+            elif params["sort_by"] in ("average_asc", "average_desc"):
+                phase_preference = params.get("grade_sort_phase", "1")
+                year_preference = params.get("grade_sort_year", "latest")
+
+                query = query.outerjoin(CourseData.previous_applications)
+                query = query.outerjoin(PreviousApplications.year_data)
+
+                if year_preference != "latest" and year_preference.isdigit():
+                    query = query.where(YearData.year == int(year_preference))
+
+                if phase_preference == "1":
+                    query = query.outerjoin(YearData.phase1)
+                    # Add explicit join with Averages table
+                    query = query.outerjoin(PhaseData.averages)
+                    if params["sort_by"] == "average_asc":
+                        query = query.order_by(
+                            Averages.hs_average.asc().nullslast()
+                        )
+                    else:
+                        query = query.order_by(
+                            Averages.hs_average.desc().nullslast()
+                        )
+                elif phase_preference == "2":
+                    query = query.outerjoin(YearData.phase2)
+                    # Add explicit join with Averages table
+                    query = query.outerjoin(PhaseData.averages)
+                    if params["sort_by"] == "average_asc":
+                        query = query.order_by(
+                            Averages.hs_average.asc().nullslast()
+                        )
+                    else:
+                        query = query.order_by(
+                            Averages.hs_average.desc().nullslast()
+                        )
 
         # Apply limit
         if limit:

@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const basicSearchBar = document.getElementById('search-bar');
     const advancedSearch = document.getElementById('advanced-search');
     const advancedSearchForm = document.getElementById('advanced-search-form');
+    const sortBySelect = document.getElementById('sort_by');
+    const gradeSortOptions = document.getElementById('grade_sort_options');
     
     advancedSearchToggle.addEventListener('click', function() {
         basicSearchBar.classList.toggle('hidden');
@@ -33,24 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    let lastSearchQuery = '';
-
     const url = new URL(window.location.href);
     if (url.searchParams.has('search')) {
         const searchQuery = url.searchParams.get('search');
         const searchParams = new URLSearchParams();
         searchParams.append('course_name', searchQuery);
 
-        search(searchParams).then(() => {
-            const fragment = decodeURIComponent(location.hash.slice(1));
-            if (fragment) {
-                const element = document.getElementById(`course-${fragment}`);
-                if (element && element.classList.contains('course-card')) {
-                    element.classList.add('expanded');
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }
-        });
+        search(searchParams);
     }
     
     advancedSearchForm.addEventListener('submit', async (e) => {
@@ -73,8 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const searchQuery = searchInput.value.trim();
         if (!searchQuery) return;
-
-        lastSearchQuery = searchQuery;
 
         const searchParams = new URLSearchParams();
         searchParams.append('course_name', searchQuery);
@@ -383,13 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</div>'; // Close phase-data
         return html;
     }
-
-    // Grade sort options toggle
-    const sortBySelect = document.getElementById('sort_by');
-    const gradeSortOptions = document.getElementById('grade_sort_options');
     
     function toggleGradeSortOptions() {
-        if (sortBySelect.value === 'grade_asc' || sortBySelect.value === 'grade_desc') {
+        if (sortBySelect.value === 'grade_asc' || sortBySelect.value === 'grade_desc' || 
+            sortBySelect.value === 'average_asc' || sortBySelect.value === 'average_desc'
+        ) {
             gradeSortOptions.style.display = 'block';
         } else {
             gradeSortOptions.style.display = 'none';
