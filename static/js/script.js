@@ -256,6 +256,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>`;
         }
+
+        // Regional preferences
+        if (course.regional_preferences) {
+            html += `<div class="details-section">
+                <h4>Regional Preferences</h4>
+                <div class="details-grid">
+                    ${course.regional_preferences.percentage ? 
+                      `<div class="detail-item"><span>Percentage:</span> ${course.regional_preferences.percentage}</div>` : ''}
+                </div>
+                    ${course.regional_preferences.regions ? 
+                        `<div class="detail-item"><span>Regions:</span> ${course.regional_preferences.regions.join(', ')}</div>` : ''}
+            </div>`;
+        }
         
         return html;
     }
@@ -326,14 +339,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let html = '<div class="phase-data">';
         
-        // Basic phase info
+        // Basic phase info - always show vacancies and grade (even if grade is 0/null)
         html += '<div class="phase-stats">';
-        if (phaseData.vacancies !== undefined) {
-            html += `<div class="stat-item"><span>Vacancies</span>${phaseData.vacancies}</div>`;
-        }
-        if (phaseData.grade_last) {
-            html += `<div class="stat-item"><span>Last Grade</span>${phaseData.grade_last}</div>`;
-        }
+        html += `<div class="stat-item"><span>Vacancies</span>${phaseData.vacancies !== undefined ? phaseData.vacancies : 'N/A'}</div>`;
+        html += `<div class="stat-item"><span>Last Grade</span>${phaseData.grade_last !== undefined && phaseData.grade_last !== null ? phaseData.grade_last : 'N/A'}</div>`;
         html += '</div>';
         
         // Candidates info
@@ -342,15 +351,9 @@ document.addEventListener('DOMContentLoaded', () => {
             html += '<h5>Candidates</h5>';
             html += '<div class="data-grid">';
             html += `<div class="data-item"><span>Total</span>${phaseData.candidates.total}</div>`;
-            if (phaseData.candidates.fem !== undefined) {
-                html += `<div class="data-item"><span>Female</span>${phaseData.candidates.fem}</div>`;
-            }
-            if (phaseData.candidates.masc !== undefined) {
-                html += `<div class="data-item"><span>Male</span>${phaseData.candidates.masc}</div>`;
-            }
-            if (phaseData.candidates.first_option !== undefined) {
-                html += `<div class="data-item"><span>First Option</span>${phaseData.candidates.first_option}</div>`;
-            }
+            html += `<div class="data-item"><span>Female</span>${phaseData.candidates.fem !== undefined ? phaseData.candidates.fem : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>Male</span>${phaseData.candidates.masc !== undefined ? phaseData.candidates.masc : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>First Option</span>${phaseData.candidates.first_option !== undefined ? phaseData.candidates.first_option : 'N/A'}</div>`;
             html += '</div></div>';
         }
         
@@ -360,21 +363,44 @@ document.addEventListener('DOMContentLoaded', () => {
             html += '<h5>Placed</h5>';
             html += '<div class="data-grid">';
             html += `<div class="data-item"><span>Total</span>${phaseData.placed.total}</div>`;
-            if (phaseData.placed.fem !== undefined) {
-                html += `<div class="data-item"><span>Female</span>${phaseData.placed.fem}</div>`;
-            }
-            if (phaseData.placed.masc !== undefined) {
-                html += `<div class="data-item"><span>Male</span>${phaseData.placed.masc}</div>`;
-            }
-            if (phaseData.placed.first_option !== undefined) {
-                html += `<div class="data-item"><span>First Option</span>${phaseData.placed.first_option}</div>`;
-            }
+            html += `<div class="data-item"><span>Female</span>${phaseData.placed.fem !== undefined ? phaseData.placed.fem : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>Male</span>${phaseData.placed.masc !== undefined ? phaseData.placed.masc : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>First Option</span>${phaseData.placed.first_option !== undefined ? phaseData.placed.first_option : 'N/A'}</div>`;
+            html += '</div></div>';
+        }
+        
+        // Average grades - add this section to display averages
+        if (phaseData.averages) {
+            html += '<div class="data-group">';
+            html += '<h5>Average Grades</h5>';
+            html += '<div class="data-grid">';
+            html += `<div class="data-item"><span>Application</span>${phaseData.averages.application_grade !== undefined ? phaseData.averages.application_grade : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>Entrance Exams</span>${phaseData.averages.entrance_exams !== undefined ? phaseData.averages.entrance_exams : 'N/A'}</div>`;
+            html += `<div class="data-item"><span>High School</span>${phaseData.averages.hs_average !== undefined ? phaseData.averages.hs_average : 'N/A'}</div>`;
             html += '</div></div>';
         }
         
         html += '</div>'; // Close phase-data
         return html;
     }
+
+    // Grade sort options toggle
+    const sortBySelect = document.getElementById('sort_by');
+    const gradeSortOptions = document.getElementById('grade_sort_options');
+    
+    function toggleGradeSortOptions() {
+        if (sortBySelect.value === 'grade_asc' || sortBySelect.value === 'grade_desc') {
+            gradeSortOptions.style.display = 'block';
+        } else {
+            gradeSortOptions.style.display = 'none';
+        }
+    }
+    
+    // Initial toggle
+    toggleGradeSortOptions();
+    
+    // Toggle on change
+    sortBySelect.addEventListener('change', toggleGradeSortOptions);
 });
 
 // Add event listeners for historical data tabs

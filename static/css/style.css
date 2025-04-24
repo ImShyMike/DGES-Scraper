@@ -627,3 +627,20 @@ button:hover {
 .form-actions button[type="reset"] {
     background-color: var(--ctp-peach);
 }
+
+#grade_sort_options {
+  display: none;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--ctp-surface0);
+  border-radius: 6px;
+}
+
+#grade_sort_options label {
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#grade_sort_options select {
+  margin-right: 1rem;
+}

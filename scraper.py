@@ -104,8 +104,8 @@ def build_phase(phase_dict: Dict[str, Any]) -> PhaseData:
         ),
         placed=build_candidate(
             {
-                k: phase_dict[k]
-                for k in ["total", "fem", "masc", "first_option"]
+                k[2:]: phase_dict[k]
+                for k in ["p_total", "p_fem", "p_masc", "p_first_option"]
                 if k in phase_dict
             },
             is_placed=True,
@@ -370,13 +370,13 @@ for n, course in enumerate(courses):
                         field = "first_option"
                 elif current_section == "Colocados":
                     if label == "Colocados":
-                        field = "total"
+                        field = "p_total"
                     elif label == "do Sexo Feminino":
-                        field = "fem"
+                        field = "p_fem"
                     elif label == "do Sexo Masculino":
-                        field = "masc"
+                        field = "p_masc"
                     elif label == "em 1ª Opção":
-                        field = "first_option"
+                        field = "p_first_option"
                 elif current_section == "Médias dos Colocados":
                     if label == "Nota de Candidatura":
                         field = "application_grade"

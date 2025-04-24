@@ -48,6 +48,22 @@
                                 <option value="grade_desc">Last Admission Grade (High to Low)</option>
                             </select>
                         </div>
+                        
+                        <div class="search-option" id="grade_sort_options">
+                            <label for="grade_sort_phase">Phase:</label>
+                            <select id="grade_sort_phase" name="grade_sort_phase">
+                                <option value="1">Phase 1</option>
+                                <option value="2">Phase 2</option>
+                            </select>
+                            
+                            <label for="grade_sort_year">Year:</label>
+                            <select id="grade_sort_year" name="grade_sort_year">
+                                <option value="latest">Latest Available</option>
+                                {% for year in range(datetime.year-3, datetime.year) %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="form-section">
@@ -241,9 +257,10 @@
                             <label for="competition">Competition Type:</label>
                             <select id="competition" name="competition" multiple>
                                 <option value="">Any</option>
-                                <option value="Concurso Nacional">Concurso Nacional</option>
-                                <option value="Concurso Local">Concurso Local</option>
-                                <option value="Concurso Institucional">Concurso Institucional</option>
+                                <option value="Institucional">Institucional</option>
+                                <option value="Nacional">Nacional</option>
+                                <option value="Local">Local</option>
+                                <option value="A informação sobre as condições de acesso deve ser obtida diretamente junto da universidade.">Desconhecido</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -376,5 +393,5 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
+</body> 
 </html>

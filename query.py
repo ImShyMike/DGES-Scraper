@@ -95,6 +95,8 @@ DEFAULT_PARAMETERS = {
     # Search configuration
     "results_per_page": "10",
     "sort_by": "course_id",
+    "grade_sort_phase": "1",
+    "grade_sort_year": "latest",
 }
 
 
@@ -106,7 +108,6 @@ def full_search(config: dict) -> Sequence[CourseData]:
 
     # Filter config to only include known options
     params = DEFAULT_PARAMETERS.copy()
-
     config = {
         k: v for k, v in config.items() if k in DEFAULT_PARAMETERS and v is not None
     }
@@ -381,7 +382,6 @@ def full_search(config: dict) -> Sequence[CourseData]:
 
         # Region filters
         if params["region"]:
-            # Filter courses by region
             query = query.where(
                 CourseData.regional_preference.has(
                     RegionalPreference.regions.any(name=params["region"])
@@ -396,7 +396,7 @@ def full_search(config: dict) -> Sequence[CourseData]:
                     YearData.year == year_filter
                 )
             else:
-                historical_condition = true()  # SQLAlchemy true expression
+                historical_condition = true()
 
             if params["min_grade_last"] and params["max_grade_last"]:
                 if params["last_grade_operator"] == "between":
@@ -505,20 +505,30 @@ def full_search(config: dict) -> Sequence[CourseData]:
                     .join(Course.institution)
                     .order_by(Institution.name.asc())
                 )
-            elif params["sort_by"] == "grade_asc":
-                query = (
-                    query.outerjoin(CourseData.previous_applications)
-                    .outerjoin(PreviousApplications.year_data)
-                    .outerjoin(YearData.phase1)
-                    .order_by(PhaseData.grade_last.asc().nullslast())
-                )
-            elif params["sort_by"] == "grade_desc":
-                query = (
-                    query.outerjoin(CourseData.previous_applications)
-                    .outerjoin(PreviousApplications.year_data)
-                    .outerjoin(YearData.phase1)
-                    .order_by(PhaseData.grade_last.desc().nullslast())
-                )
+            elif params["sort_by"] == "grade_asc" or params["sort_by"] == "grade_desc":
+                sort_direction = "asc" if params["sort_by"] == "grade_asc" else "desc"
+
+                phase_preference = params.get("grade_sort_phase", "1")
+                year_preference = params.get("grade_sort_year", "latest")
+
+                query = query.outerjoin(CourseData.previous_applications)
+                query = query.outerjoin(PreviousApplications.year_data)
+
+                if year_preference != "latest" and year_preference.isdigit():
+                    query = query.where(YearData.year == int(year_preference))
+
+                if phase_preference == "1":
+                    query = query.outerjoin(YearData.phase1)
+                    if sort_direction == "asc":
+                        query = query.order_by(PhaseData.grade_last.asc().nullslast())
+                    else:
+                        query = query.order_by(PhaseData.grade_last.desc().nullslast())
+                elif phase_preference == "2":
+                    query = query.outerjoin(YearData.phase2)
+                    if sort_direction == "asc":
+                        query = query.order_by(PhaseData.grade_last.asc().nullslast())
+                    else:
+                        query = query.order_by(PhaseData.grade_last.desc().nullslast())
 
         # Apply limit
         if limit:
@@ -527,7 +537,6 @@ def full_search(config: dict) -> Sequence[CourseData]:
         # Execute query
         result = session.exec(query).all()
 
-        # Convert to dict format for API response
         return result
 
 
@@ -802,7 +811,7 @@ def course_data_to_dict(course_data):
         rp = course_data.regional_preference
         result["regional_preference"] = {
             "percentage": rp.percentage,
-            "regions": [{"name": region.name} for region in rp.regions],
+            "regions": [region.name for region in rp.regions],
         }
 
     # Other access preferences
