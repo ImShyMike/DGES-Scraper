@@ -1,66 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const searchForm = document.querySelector('form[action="/search"]');
-    const searchInput = document.getElementById('basic-name');
     const resultsContainer = document.querySelector('.results-section');
-    const advancedSearchToggle = document.getElementById('advanced-search-toggle');
-    const basicSearchBar = document.getElementById('search-bar');
-    const advancedSearch = document.getElementById('advanced-search');
-    const advancedSearchForm = document.getElementById('advanced-search-form');
-    const sortBySelect = document.getElementById('sort_by');
-    const gradeSortOptions = document.getElementById('grade_sort_options');
-    
-    advancedSearchToggle.addEventListener('click', function() {
-        basicSearchBar.classList.toggle('hidden');
-        advancedSearch.classList.toggle('hidden');
-        
-        if (advancedSearch.classList.contains('hidden')) {
-            advancedSearchToggle.textContent = 'Advanced Mode';
-        } else {
-            advancedSearchToggle.textContent = 'Simple Mode';
-        }
-    });
-
-    // Handle operator changes
-    const operatorSelects = document.querySelectorAll('.operator-select');
-    operatorSelects.forEach(select => {
-        select.addEventListener('change', function() {
-            const rangeInputs = this.nextElementSibling;
-            const maxInput = rangeInputs.querySelector('input[id$="_max"]');
-            
-            if (this.value === 'between') {
-                maxInput.classList.remove('hidden');
-            } else {
-                maxInput.classList.add('hidden');
-            }
-        });
-    });
-    
-    advancedSearchForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(advancedSearchForm);
-        const searchParams = new URLSearchParams();
-        
-        for (const [key, value] of formData.entries()) {
-            if (value) {
-                searchParams.append(key, value);
-            }
-        }
-
-        await search(searchParams);
-    });
-
-    searchForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const searchQuery = searchInput.value.trim();
-        if (!searchQuery) return;
-
-        const searchParams = new URLSearchParams();
-        searchParams.append('course_name', searchQuery);
-        
-        await search(searchParams);
-    });
 
     async function search(searchParams) {
         // Show loading state
@@ -103,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         let resultsHTML = `
-            <h2>Search Results</h2>
             <div class="courses-list">
         `;
         let counter = 0;
@@ -116,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             counter += 1;
             
             resultsHTML += `
-                <div class="course-card" id="course-${counter}">
+                <div class="course-card expanded" id="course-${counter}">
                     <div class="course-header" onclick="this.parentElement.classList.toggle('expanded')">
                         <div class="course-title">
                             <h3>${courseInfo.id || ''} ${courseInfo.name || 'Untitled Course'}</h3>
@@ -365,22 +303,11 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</div>'; // Close phase-data
         return html;
     }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append('unique_id', window.location.pathname.split('/').pop());
     
-    function toggleGradeSortOptions() {
-        if (sortBySelect.value === 'grade_asc' || sortBySelect.value === 'grade_desc' || 
-            sortBySelect.value === 'average_asc' || sortBySelect.value === 'average_desc'
-        ) {
-            gradeSortOptions.style.display = 'block';
-        } else {
-            gradeSortOptions.style.display = 'none';
-        }
-    }
-    
-    // Initial toggle
-    toggleGradeSortOptions();
-    
-    // Toggle on change
-    sortBySelect.addEventListener('change', toggleGradeSortOptions);
+    search(searchParams);
 });
 
 // Add event listeners for historical data tabs

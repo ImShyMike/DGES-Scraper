@@ -21,6 +21,24 @@ def index():
     """Main page."""
     return render_template("index.html", datetime=datetime.now())
 
+@app.route("/c/<course_id>", methods=["GET"])
+def course(course_id):
+    """Course page."""
+    try:
+        course_id = int(course_id)
+    except ValueError:
+        return jsonify({"error": "Invalid course ID"}), 400
+
+    course_data = full_search({"unique_id": course_id})
+    if not course_data:
+        return render_template("not_found.html"), 404
+
+    return render_template("course.html", course_id=course_id)
+
+@app.errorhandler(404)
+def not_found(_):
+    """404 error handler."""
+    return render_template("not_found.html"), 404
 
 @app.route("/api/search", methods=["POST"])
 @limiter.limit("30 per minute")

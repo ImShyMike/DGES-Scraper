@@ -207,10 +207,7 @@ def full_search(config: dict) -> Sequence[CourseData]:
                 )
 
         if params["unique_id"]:
-            if params["unique_id_operator"] == "exact":
-                query = query.where(CourseData.id == params["unique_id"])
-            elif params["unique_id_operator"] == "contains":
-                query = query.where(CourseData.id.like(f"%{params['unique_id']}%"))
+            query = query.where(CourseData.id == params["unique_id"])
 
         # Characteristics filters
         if params["degree"]:

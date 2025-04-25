@@ -11,7 +11,7 @@
 </head>
 <body>
     <header>
-        <h1>DGES Course Explorer</h1>
+        <h1><a href="{{ url_for('index') }}">DGES Course Explorer</a></h1>
     </header>
 
     <main>
@@ -28,8 +28,8 @@
             </div>
             <div id="advanced-search" class="hidden">
                 <form id="advanced-search-form" action="/search" method="GET">
-                    <div class="search-options">
-                        <div class="search-option">
+                    <div class="form-section">
+                        <div class="form-row">
                             <label for="results_per_page">Results per page:</label>
                             <select id="results_per_page" name="results_per_page">
                                 <option value="10">10</option>
@@ -38,7 +38,7 @@
                                 <option value="100">100</option>
                             </select>
                         </div>
-                        <div class="search-option">
+                        <div class="form-row">
                             <label for="sort_by">Sort by:</label>
                             <select id="sort_by" name="sort_by">
                                 <option value="course_id">Course ID</option>
@@ -51,7 +51,7 @@
                             </select>
                         </div>
                         
-                        <div class="search-option" id="grade_sort_options">
+                        <div class="form-row" id="grade_sort_options">
                             <label for="grade_sort_phase">Phase:</label>
                             <select id="grade_sort_phase" name="grade_sort_phase">
                                 <option value="1">Phase 1</option>
