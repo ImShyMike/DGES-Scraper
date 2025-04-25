@@ -10,4 +10,4 @@ The website is a bit hard to search and i wanted a better way to do it. (so ofc 
 
 - [x] Data scraper
 - [x] Proper database
-- [ ] Website for easy searching
+- [x] Website for easy searching

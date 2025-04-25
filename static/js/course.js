@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${characteristics.type ? `<div class="detail-item"><span>Type:</span> ${characteristics.type}</div>` : ''}
                                 ${characteristics.competition ? `<div class="detail-item"><span>Competition:</span> ${characteristics.competition}</div>` : ''}
                                 ${characteristics.current_vacancies ? `<div class="detail-item"><span>Vacancies:</span> ${characteristics.current_vacancies}</div>` : ''}
-                                ${course.id ? `<div class="detail-item"><span>Unique ID:</span> <a href="c/${course.id}">${course.id}</a></div>` : ''}
+                                ${course.id ? `<div class="detail-item"><span>Unique ID:</span> <a href="">${course.id}</a></div>` : ''}
                             </div>
                         </div>
                         
