@@ -141,7 +141,7 @@ def parse_value(val: str) -> Any:
 def get_structured(header: Tag | NavigableString | None):
     """Get the structured data from a header tag."""
     if not header:
-        return None, None
+        return None, None, None
 
     current_element = get_next(get_next(header))
 
@@ -154,9 +154,13 @@ def get_structured(header: Tag | NavigableString | None):
 
         current_element = get_next(get_next(current_element))
         value2 = current_element.text.strip()
-        return value1, value2
 
-    return None, None
+        current_element = get_next(get_next(current_element))
+        value3 = current_element.text.strip()
+
+        return value1, value2, value3
+
+    return None, None, None
 
 
 start_time = time.time()
@@ -550,7 +554,7 @@ for n, course in enumerate(courses):
     # Get the minimum classification
     min_classification = None  # pylint: disable=invalid-name
     min_classification_header = soup.find("h2", string="Classificações Mínimas")
-    application_grade_value, entrance_exams_value = get_structured(
+    application_grade_value, entrance_exams_value, _ = get_structured(
         min_classification_header
     )
     if application_grade_value and entrance_exams_value:
@@ -564,12 +568,18 @@ for n, course in enumerate(courses):
     calc_formula = None  # pylint: disable=invalid-name
     calc_formula_header = soup.find("h2", string="Fórmula de Cálculo")
 
-    hs_average_value, entrance_exams_value = get_structured(calc_formula_header)
+    hs_average_value, entrance_exams_value, prerequisites_value = get_structured(calc_formula_header)
     if hs_average_value and entrance_exams_value:
         logging.info("Found calculation formula header.")
+
+        prerequisites = None
+        if prerequisites_value and prerequisites_value.split(": ")[0] == "Pré-Requisito":
+            prerequisites = prerequisites_value.split(": ")[1].strip()[:-1]
+
         calc_formula = CalculationFormula(
             hs_average=parse_value(hs_average_value.rsplit(" ", 2)[2][:-1]),
             entrance_exams=parse_value(entrance_exams_value.rsplit(" ", 2)[2][:-1]),
+            prerequisites=prerequisites
         )
 
     # Get the regional preference

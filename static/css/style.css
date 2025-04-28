@@ -1,17 +1,17 @@
 /* Catppuccin Mocha Colors */
 :root {
-  --ctp-base: #1e1e2e;
-  --ctp-surface0: #313244;
-  --ctp-surface1: #45475a;
-  --ctp-text: #cdd6f4;
-  --ctp-subtext0: #a6adc8;
-  --ctp-blue: #89b4fa;
-  --ctp-lavender: #b4befe;
-  --ctp-mauve: #cba6f7;
-  --ctp-pink: #f5c2e7;
-  --ctp-peach: #fab387;
-  --ctp-green: #a6e3a1;
-  --ctp-shadow: rgba(17, 17, 27, 0.4);
+  --base: #1e1e2e;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --text: #cdd6f4;
+  --subtext0: #a6adc8;
+  --blue: #89b4fa;
+  --lavender: #b4befe;
+  --mauve: #cba6f7;
+  --pink: #f5c2e7;
+  --peach: #fab387;
+  --green: #a6e3a1;
+  --shadow: rgba(17, 17, 27, 0.4);
 }
 
 * {
@@ -22,8 +22,8 @@
 }
 
 body {
-  background-color: var(--ctp-base);
-  color: var(--ctp-text);
+  background-color: var(--base);
+  color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
   display: flex;
@@ -38,21 +38,21 @@ header {
 }
 
 a:link {
-  color: var(--ctp-blue);
+  color: var(--blue);
   text-decoration: none;
 }
 
 a:visited {
-  color: var(--ctp-blue);
+  color: var(--blue);
 }
 
 a:hover {
-  color: var(--ctp-lavender); 
+  color: var(--lavender); 
   text-decoration: underline;
 }
 
 header h1 {
-  color: var(--ctp-mauve);
+  color: var(--mauve);
   text-decoration: none;
   font-weight: 700;
   font-size: 2.2rem;
@@ -61,7 +61,7 @@ header h1 {
 }
 
 header a:visited {
-  color: var(--ctp-mauve);
+  color: var(--mauve);
 }
 
 main {
@@ -80,17 +80,17 @@ footer {
 }
 
 .search-section {
-  background-color: var(--ctp-surface0);
+  background-color: var(--surface0);
   border-radius: 16px;
   padding: 2.5rem;
-  box-shadow: 0 8px 24px var(--ctp-shadow);
+  box-shadow: 0 8px 24px var(--shadow);
   margin: 2rem auto;
   margin-top: 0;
   max-width: 700px;
 }
 
 .search-section h2 {
-  color: var(--ctp-blue);
+  color: var(--blue);
   font-weight: 600;
   font-size: 1.5rem;
 }
@@ -108,8 +108,8 @@ footer {
 }
 
 #advanced-search-toggle {
-  background: var(--ctp-surface1);
-  color: var(--ctp-text);
+  background: var(--surface1);
+  color: var(--text);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -118,8 +118,8 @@ footer {
 }
 
 #advanced-search-toggle:hover {
-  background: var(--ctp-lavender);
-  color: var(--ctp-base);
+  background: var(--lavender);
+  color: var(--base);
 }
 
 #basic-search-form {
@@ -135,8 +135,8 @@ input, select {
   flex: 1;
   padding: 0 24px;
   border: none;
-  background-color: var(--ctp-base);
-  color: var(--ctp-text);
+  background-color: var(--base);
+  color: var(--text);
   font-size: 1rem;
   z-index: 1;
 }
@@ -146,13 +146,13 @@ input:focus {
 }
 
 input::placeholder {
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
 }
 
 button {
   position: relative;
-  background-color: var(--ctp-mauve);
-  color: var(--ctp-base);
+  background-color: var(--mauve);
+  color: var(--base);
   border: none;
   padding: 0 28px;
   font-weight: 600;
@@ -161,12 +161,12 @@ button {
 }
 
 button:hover {
-  background-color: var(--ctp-pink);
+  background-color: var(--pink);
 }
 
 /* Focus style for the entire form */
 #basic-search-form:focus-within {
-  outline: 2px solid var(--ctp-lavender);
+  outline: 2px solid var(--lavender);
   box-shadow: 0 0 0 4px rgba(180, 190, 254, 0.2);
 }
 
@@ -205,7 +205,7 @@ button:hover {
 }
 
 .results-section h2 {
-  color: var(--ctp-lavender);
+  color: var(--lavender);
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -213,13 +213,13 @@ button:hover {
 .loading, .no-results, .error-message {
   text-align: center;
   padding: 2rem;
-  color: var(--ctp-subtext0);
-  background: var(--ctp-surface0);
+  color: var(--subtext0);
+  background: var(--surface0);
   border-radius: 12px;
 }
 
 .error-message {
-  color: var(--ctp-peach);
+  color: var(--peach);
 }
 
 .courses-grid {
@@ -229,30 +229,30 @@ button:hover {
 }
 
 .course-card h3 {
-  color: var(--ctp-blue);
+  color: var(--blue);
   margin-bottom: 0.5rem;
   font-size: 1.25rem;
 }
 
 .course-card .credits {
   display: inline-block;
-  background: var(--ctp-surface1);
+  background: var(--surface1);
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
   margin-bottom: 1rem;
   font-size: 0.875rem;
-  color: var(--ctp-mauve);
+  color: var(--mauve);
 }
 
 .course-card .description {
   margin-bottom: 1rem;
-  color: var(--ctp-text);
+  color: var(--text);
   line-height: 1.5;
 }
 
 .course-card .prerequisites {
   font-size: 0.875rem;
-  color: var(--ctp-peach);
+  color: var(--peach);
 }
 
 @media (max-width: 600px) {
@@ -265,11 +265,18 @@ button:hover {
 .courses-list {
   display: flex;
   flex-direction: column;
-  background: var(--ctp-surface0);
+  background: var(--surface0);
   border-radius: 12px;
   padding: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px var(--ctp-shadow);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.course-header-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .course-header {
@@ -282,18 +289,28 @@ button:hover {
 }
 
 .course-header:hover {
-  background: var(--ctp-surface1);
+  background: var(--surface1);
+}
+
+.course-number {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-right: 1rem;
+    background: var(--lavender);
+    color: var(--base);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
 }
 
 .course-title h3 {
-  color: var(--ctp-blue);
+  color: var(--blue);
   margin-bottom: 0.25rem;
   font-size: 1.25rem;
 }
 
 .course-title .institution {
   display: block;
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
   font-size: 0.9rem;
 }
 
@@ -309,7 +326,7 @@ button:hover {
 .expand-icon::after {
   content: "";
   position: absolute;
-  background-color: var(--ctp-lavender);
+  background-color: var(--lavender);
   border-radius: 2px;
 }
 
@@ -337,8 +354,8 @@ button:hover {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.5s ease;
-  background: var(--ctp-base);
-  border-top: 2px solid var(--ctp-surface1);
+  background: var(--base);
+  border-top: 2px solid var(--surface1);
   padding: 0 1.5rem;
 }
 
@@ -359,7 +376,7 @@ button:hover {
 .details-section {
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--ctp-surface0);
+  border-bottom: 1px solid var(--surface0);
 }
 
 .details-section:last-child {
@@ -369,7 +386,7 @@ button:hover {
 }
 
 .details-section h4 {
-  color: var(--ctp-mauve);
+  color: var(--mauve);
   margin-bottom: 1rem;
   font-weight: 600;
   font-size: 1.1rem;
@@ -392,7 +409,7 @@ button:hover {
 }
 
 .detail-item span {
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
   font-size: 0.85rem;
 }
 
@@ -402,14 +419,14 @@ button:hover {
 }
 
 .exam-bundle {
-  background: var(--ctp-surface0);
+  background: var(--surface0);
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
 }
 
 .exam-item {
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--ctp-surface1);
+  border-bottom: 1px solid var(--surface1);
 }
 
 .exam-item:last-child {
@@ -417,13 +434,13 @@ button:hover {
 }
 
 .exam-code {
-  color: var(--ctp-peach);
+  color: var(--peach);
   font-weight: bold;
   margin-right: 0.5rem;
 }
 
 .exam-note {
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
 }
@@ -431,7 +448,7 @@ button:hover {
 .exam-separator {
   text-align: center;
   padding: 0.5rem 0;
-  color: var(--ctp-lavender);
+  color: var(--lavender);
   font-weight: 600;
 }
 
@@ -450,25 +467,25 @@ button:hover {
 
 .year-tab, .phase-tab {
   padding: 0.5rem 1rem;
-  background: var(--ctp-surface0);
+  background: var(--surface0);
   border: none;
   border-radius: 6px;
-  color: var(--ctp-text);
+  color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .year-tab.active, .phase-tab.active {
-  background: var(--ctp-lavender);
-  color: var(--ctp-base);
+  background: var(--lavender);
+  color: var(--base);
 }
 
 .year-tab:hover, .phase-tab:hover {
-  background: var(--ctp-surface1);
+  background: var(--surface1);
 }
 
 .year-tab.active:hover, .phase-tab.active:hover {
-  background: var(--ctp-pink);
+  background: var(--pink);
 }
 
 .year-panel, .phase-panel {
@@ -489,7 +506,7 @@ button:hover {
 }
 
 .stat-item {
-  background: var(--ctp-surface1);
+  background: var(--surface1);
   padding: 0.75rem 1rem;
   border-radius: 8px;
   display: flex;
@@ -500,7 +517,7 @@ button:hover {
 }
 
 .stat-item span {
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
   font-size: 0.8rem;
   margin-bottom: 0.25rem;
 }
@@ -510,7 +527,7 @@ button:hover {
 }
 
 .data-group h5 {
-  color: var(--ctp-lavender);
+  color: var(--lavender);
   margin-bottom: 0.75rem;
   font-size: 1rem;
 }
@@ -524,7 +541,7 @@ button:hover {
 }
 
 .data-item {
-  background: var(--ctp-surface0);
+  background: var(--surface0);
   padding: 0.75rem;
   border-radius: 8px;
   flex: 1;
@@ -536,7 +553,7 @@ button:hover {
 
 .data-item span {
   display: block;
-  color: var(--ctp-subtext0);
+  color: var(--subtext0);
   font-size: 0.8rem;
   margin-bottom: 0.25rem;
 }
@@ -549,17 +566,17 @@ button:hover {
 
 .course-link a {
   display: inline-block;
-  color: var(--ctp-blue);
+  color: var(--blue);
   text-decoration: none;
   padding: 0.75rem 1.5rem;
-  border: 2px solid var(--ctp-blue);
+  border: 2px solid var(--blue);
   border-radius: 50px;
   transition: all 0.2s ease;
 }
 
 .course-link a:hover {
-  background: var(--ctp-blue);
-  color: var(--ctp-base);
+  background: var(--blue);
+  color: var(--base);
 }
 
 @media (max-width: 768px) {
@@ -588,12 +605,12 @@ button:hover {
 .form-section {
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--ctp-surface1);
+    border-bottom: 1px solid var(--surface1);
 }
 
 .form-section h3 {
     margin-bottom: 10px;
-    color: var(--ctp-mauve);
+    color: var(--mauve);
 }
 
 .form-row {
@@ -610,7 +627,7 @@ button:hover {
 .form-row input, .form-row select {
     flex: 1;
     padding: 8px;
-    border: 1px solid var(--ctp-surface1);
+    border: 1px solid var(--surface1);
     border-radius: 4px;
 }
 
@@ -622,22 +639,22 @@ button:hover {
 
 .form-actions button {
     padding: 10px 15px;
-    background-color: var(--ctp-green);
-    color: var(--ctp-base);
+    background-color: var(--green);
+    color: var(--base);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
 .form-actions button[type="reset"] {
-    background-color: var(--ctp-peach);
+    background-color: var(--peach);
 }
 
 #grade_sort_options {
   display: none;
   margin-top: 0.5rem;
   padding: 0.5rem;
-  background: var(--ctp-surface0);
+  background: var(--surface0);
   border-radius: 6px;
 }
 

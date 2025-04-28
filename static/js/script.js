@@ -118,9 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsHTML += `
                 <div class="course-card" id="course-${counter}">
                     <div class="course-header" onclick="this.parentElement.classList.toggle('expanded')">
-                        <div class="course-title">
-                            <h3>${courseInfo.id || ''} ${courseInfo.name || 'Untitled Course'}</h3>
-                            <span class="institution">${institution.name || ''}</span>
+                        <div class="course-header-content">
+                            <span class="course-number">${counter}</span>
+                            <div class="course-title">
+                                <h3>${courseInfo.id || ''} ${courseInfo.name || 'Untitled Course'}</h3>
+                                <span class="institution">${institution.name || ''}</span>
+                            </div>
                         </div>
                         <div class="expand-icon"></div>
                     </div>
@@ -233,6 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
                       `<div class="detail-item"><span>High School:</span> ${course.calculation_formula.hs_average}%</div>` : ''}
                     ${course.calculation_formula.entrance_exams ? 
                       `<div class="detail-item"><span>Entrance Exams:</span> ${course.calculation_formula.entrance_exams}%</div>` : ''}
+                    ${course.calculation_formula.prerequisites ? 
+                      `<div class="detail-item"><span>Prerequisites:</span> ${course.calculation_formula.prerequisites}%</div>` : ''}
                 </div>
             </div>`;
         }

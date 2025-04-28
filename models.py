@@ -2,10 +2,8 @@
 
 from typing import List, Optional
 
-# from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel, create_engine
 
-# Specify the database URL. Here we use a local SQLite database file.
 SQLITE_URL = "sqlite:///database.db"
 engine = create_engine(SQLITE_URL, echo=False)
 
@@ -211,6 +209,7 @@ class CalculationFormula(SQLModel, table=True):
 
     hs_average: int
     entrance_exams: int
+    prerequisites: Optional[int]
 
 
 class MinimumClassification(SQLModel, table=True):

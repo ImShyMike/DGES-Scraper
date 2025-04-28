@@ -171,6 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
                       `<div class="detail-item"><span>High School:</span> ${course.calculation_formula.hs_average}%</div>` : ''}
                     ${course.calculation_formula.entrance_exams ? 
                       `<div class="detail-item"><span>Entrance Exams:</span> ${course.calculation_formula.entrance_exams}%</div>` : ''}
+                    ${course.calculation_formula.prerequisites ? 
+                      `<div class="detail-item"><span>Prerequisites:</span> ${course.calculation_formula.prerequisites}%</div>` : ''}
                 </div>
             </div>`;
         }
