@@ -172,7 +172,7 @@ button:hover {
 
 @media (max-width: 600px) {
   form {
-    height: auto;
+    height: auto !important;
     flex-direction: column;
     border-radius: 16px;
   }
@@ -182,7 +182,7 @@ button:hover {
     border-radius: 16px 16px 0 0;
   }
   
-  button {
+  button[type="submit"] {
     padding: 12px;
     border-radius: 0 0 16px 16px;
     width: 100%;
